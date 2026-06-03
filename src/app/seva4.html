@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalmDo - Deep Integration Workspace Engine</title>
+    <style>
+        :root {
+            --bg-primary: #f8fafc; --bg-surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
+            --accent: #8b5cf6; --accent-hover: #7c3aed; --border-color: #e2e8f0;
+            --danger: #ef4444; --danger-bg: #fee2e2; --success: #10b981; --success-bg: #d1fae5;
+            --warning: #f59e0b; --warning-bg: #fef3c7; --radius-md: 16px; --radius-sm: 8px;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-main); min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; position: relative; overflow-x: hidden; }
+        
+        .app-container { width: 100%; max-width: 720px; transition: all 0.25s ease; position: relative; }
+        body.panel-open .app-container { margin-right: 420px; }
+        
+        header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+        h1 { font-size: 1.3rem; font-weight: 700; color: #0f172a; }
+
+        .control-strip { display: flex; align-items: center; gap: 10px; }
+        .select-identity { padding: 6px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid var(--border-color); background: #fff; font-weight: 600; cursor: pointer; outline: none; }
+
+        /* Simulation Time Box Header */
+        .sim-clock-banner { background: #0f172a; color: #38bdf8; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.85rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #1e293b; }
+        .sim-time-digits { font-weight: bold; font-size: 1rem; color: #f59e0b; letter-spacing: 1px; }
+
+        /* Triage Stack 1: Sandboxed Overdue Lockout Area */
+        .critical-overdue-zone { background: linear-gradient(135deg, #fff5f5, #ffebe8); border: 2px dashed var(--danger); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: none; }
+        .critical-overdue-zone.active { display: block; }
+        .critical-title { font-size: 0.8rem; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+
+        /* Triage Stack 2: Immediate 30-Min Seva Trace Box */
+        .immediate-seva-zone { background: linear-gradient(135deg, #fffdf5, #fef3c7); border: 2px dashed var(--warning); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: none; }
+        .immediate-seva-zone.active { display: block; }
+        .immediate-title { font-size: 0.8rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+
+        /* Triage Stack 3: Horizontal Chrono-Track Timeline Rail */
+        .chrono-track-outer { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .chrono-track-title { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .chrono-rail { display: flex; gap: 12px; overflow-x: auto; padding: 4px 4px 12px 4px; scrollbar-width: thin; }
+        .chrono-node { flex: 0 0 160px; background: white; border: 1px solid var(--border-color); padding: 10px; border-radius: var(--radius-sm); border-top: 4px solid var(--accent); box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.2s; }
+        .chrono-node:hover { transform: translateY(-2px); }
+        .chrono-time { font-family: monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent); }
+        .chrono-desc { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+
+        /* Action Triggers */
+        .fab-trigger { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; background: var(--accent); color: white; border-radius: 50%; border: none; font-size: 1.75rem; font-weight: bold; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.4); display: flex; align-items: center; justify-content: center; z-index: 100; transition: transform 0.2s, background-color 0.2s; }
+        .fab-trigger:hover { background: var(--accent-hover); transform: scale(1.05); }
+        body.alex-view #admin-fab { display: none !important; }
+
+        /* Workspace Rapid Entry Autocomplete Elements */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        .modal-window { background: var(--bg-surface); border-radius: var(--radius-md); max-width: 960px; width: 100%; max-height: 85vh; display: grid; grid-template-columns: 1.2fr 1fr; box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid var(--border-color); }
+        .modal-left-inputs { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; border-right: 1px solid var(--border-color); position: relative; }
+        .modal-right-preview { padding: 1.5rem; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; justify-content: center; }
+        
+        .inline-autocomplete-menu { position: absolute; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); z-index: 2100; display: none; width: 220px; max-height: 180px; overflow-y: auto; }
+        .menu-opt { padding: 0.6rem 0.8rem; font-size: 0.85rem; cursor: pointer; font-weight: 600; color: var(--text-main); border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; }
+        .menu-opt:hover { background: #f5f3ff; color: var(--accent); }
+        .hidden-cal-trigger { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+
+        /* Horizon Filters Row */
+        .horizon-filters { display: flex; gap: 8px; margin-bottom: 1.5rem; list-style: none; }
+        .horizon-btn { border: 1px solid var(--border-color); background: white; padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .horizon-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+        .badge-count { font-size: 0.7rem; background: #e2e8f0; color: var(--text-main); padding: 2px 6px; border-radius: 10px; font-weight: 800; }
+        .horizon-btn.active .badge-count { background: rgba(255,255,255,0.2); color: white; }
+
+        /* Core Matrix Rendering Boards */
+        .task-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+        .task-card { background: var(--bg-surface); border-radius: var(--radius-md); padding: 1.25rem; border: 1px solid var(--border-color); position: relative; transition: all 0.2s; border-left: 5px solid var(--border-color); cursor: pointer; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .task-card.selected-active { border-color: var(--accent) !important; background-color: #faf5ff; }
+
+        .priority-high { border-left-color: var(--danger) !important; }
+        .priority-mid { border-left-color: var(--warning) !important; }
+        .priority-low { border-left-color: var(--success) !important; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .tag-pill { font-size: 0.7rem; font-weight: 700; background: #e0e7ff; color: var(--accent); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .priority-pill { font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .p-high { background: var(--danger-bg); color: var(--danger); }
+        .p-mid { background: var(--warning-bg); color: #b45309; }
+        .p-low { background: var(--success-bg); color: var(--success); }
+
+        .horizon-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+        .tag-overdue { background: var(--danger-bg); color: var(--danger); }
+        .tag-today { background: #fef3c7; color: #b45309; }
+        .tag-upcoming { background: #e2e8f0; color: var(--text-muted); }
+
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b; }
+
+        /* Nested Task Item Trees */
+        .subtasks-timeline { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-sm); }
+        .subtask-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 4px 6px; border-radius: 4px; }
+        .subtask-left { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+        
+        .subtask-date-badge { font-size: 0.7rem; font-weight: 700; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; }
+        .subtask-date-badge.is-today { background: #fef3c7; color: #b45309; }
+        .subtask-date-badge.is-overdue { background: var(--danger-bg); color: var(--danger); }
+        .subtask-date-badge.is-immediate { background: #ffedd5; color: #ea580c; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        .progress-bar-container { height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem; }
+        .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s; }
+
+        /* Unified Dual Panel Drawer Architectures */
+        .management-drawer { position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: var(--bg-surface); border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.05); transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1500; display: flex; flex-direction: column; }
+        .management-drawer.active { transform: translateX(0); }
+        .drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .drawer-content { padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
+        
+        .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .field-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .form-control-input { padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.9rem; font-weight: 500; outline: none; }
+
+        /* Assignee Touch Panel Checklist Designs */
+        .alex-check-row { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 8px; transition: background 0.2s; }
+        .alex-check-row:hover { background: #f5f3ff; }
+        .alex-check-left { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.9rem; }
+        .alex-check-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+
+        .subtask-builder-row { display: grid; grid-template-columns: 1.2fr 0.9fr 0.7fr auto; gap: 6px; align-items: center; background: #f8fafc; padding: 6px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+        .subtask-builder-row input { border: none; background: transparent; font-size: 0.85rem; outline: none; font-weight: 500; padding: 4px; width: 100%; }
+
+        /* Mode Filters Styling rules */
+        body.alex-view .raghav-only { display: none !important; }
+        body.raghav-view .alex-only { display: none !important; }
+    </style>
+</head>
+<body class="raghav-view">
+
+    <!-- Administrative Deployment FAB -->
+    <button class="fab-trigger" id="admin-fab" onclick="launchCreationModal()">+</button>
+
+    <div class="app-container" id="app-shell">
+        <header>
+            <div>
+                <h1 id="user-display-title">Raghav's Command Deck</h1>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Dynamic Control Flow Frame Platform</p>
+            </div>
+            <div class="control-strip">
+                <select class="select-identity" onchange="swapSessionEnvironment(this.value)">
+                    <option value="Raghav">Identity: Raghav (Assigner)</option>
+                    <option value="Alex">Identity: Alex (Assignee)</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Simulation Clock Stream & Live Indicator Box -->
+        <div class="sim-clock-banner">
+            <div>⚡ <span>PLATFORM STATE ENGINE</span> &bull; <span id="ticker-status" style="color: #10b981;">Awaiting Inputs</span></div>
+            <div>Sim Clock: <span class="sim-time-digits" id="live-sim-clock">14:15</span></div>
+        </div>
+
+        <!-- Triage Stack Tier 1: Overdue Sandboxed Lockout Interface Frame -->
+        <div class="critical-overdue-zone" id="global-overdue-dock">
+            <div class="critical-title">🚨 CRITICAL TIMELINE LOCKOUTS (OVERDUE MILESTONES)</div>
+            <div class="task-list" id="overdue-extracted-injection-stack"></div>
+        </div>
+
+        <!-- Triage Stack Tier 2: Immediate 30-Minute Seva Trace Execution Box -->
+        <div class="immediate-seva-zone" id="global-immediate-dock">
+            <div class="immediate-title">⚡ IMMEDIATE TASK TRACE EXPEDITION (NEXT 30 MIN LOCKOUT)</div>
+            <div class="task-list" id="immediate-seva-injection-stack"></div>
+        </div>
+
+        <!-- Triage Stack Tier 3: Horizontal Chrono-Track Timeline Rail -->
+        <div class="chrono-track-outer">
+            <div class="chrono-track-title">🕒 Linear Day Block Chrono-Track</div>
+            <div class="chrono-rail" id="chrono-rail-injection-point"></div>
+        </div>
+
+        <!-- Role-Contextual Horizon Filter Toggles -->
+        <ul class="horizon-filters">
+            <button class="horizon-btn active" onclick="filterHorizon('all', this)">All Horizons</button>
+            <button class="horizon-btn" onclick="filterHorizon('overdue', this)">Overdue Shells <span class="badge-count" id="count-overdue">0</span></button>
+            <button class="horizon-btn" onclick="filterHorizon('today', this)">Today Block <span class="badge-count" id="count-today">0</span></button>
+            <button class="horizon-btn" onclick="filterHorizon('upcoming', this)">Upcoming Frame <span class="badge-count" id="count-upcoming">0</span></button>
+        </ul>
+
+        <main>
+            <ul class="task-list" id="master-render-list"></ul>
+        </main>
+    </div>
+
+    <!-- Token Parser Creation Blueprint Overlay Modal Area -->
+    <div class="modal-overlay" id="creation-modal">
+        <div class="modal-window">
+            <div class="modal-left-inputs">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <h3 style="font-weight:700;">Rapid Entry Blueprint Designer</h3>
+                    <button style="background:transparent; font-size:1.2rem; border:none; cursor:pointer;" onclick="dismissCreationModal()">✕</button>
+                </div>
+                
+                <div class="field-group">
+                    <label>Main Blueprint Entry Line</label>
+                    <input type="text" id="modal-input-title" class="form-control-input" placeholder="e.g. System Calibration @Alex #MOL !high $14:30" oninput="executeModalTokenParser(this, 'main', null)">
+                    <div class="inline-autocomplete-menu" id="modal-suggest-box"></div>
+                </div>
+
+                <input type="date" id="hidden-cal-sub" class="hidden-cal-trigger">
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+                    <div class="field-group"><label>Assignee</label><input type="text" id="modal-meta-assignee" class="form-control-input" value="Alex" readonly style="background:#f1f5f9;"></div>
+                    <div class="field-group"><label>Context Tag</label><input type="text" id="modal-meta-tag" class="form-control-input" value="MOL" readonly style="background:#f1f5f9;"></div>
+                    <div class="field-group"><label>Priority</label><input type="text" id="modal-meta-priority" class="form-control-input" value="mid" readonly style="background:#f1f5f9;"></div>
+                    <div class="field-group"><label>Global Time</label><input type="text" id="modal-meta-time" class="form-control-input" value="12:00" readonly style="background:#f1f5f9;"></div>
+                </div>
+
+                <div class="field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label>Subtask Checklist Matrix (? triggers calendar)</label>
+                        <button class="form-control-input" style="padding:4px 8px; font-size:0.75rem; background:#f3e8ff; color:#9333ea; border:none; width:auto; cursor:pointer;" onclick="appendSubtaskFormRow()">+ Add Subtask</button>
+                    </div>
+                    <div id="modal-subtask-stack" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <button class="form-control-input" style="background:var(--accent); color:white; font-weight:700; cursor:pointer; margin-top:0.5rem; border:none;" onclick="commitStagedModalCard()">Deploy Architecture Board</button>
+            </div>
+            
+            <div class="modal-right-preview">
+                <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; text-align: center; margin-bottom: 0.5rem;">🔴 Live Construction Workspace Preview</div>
+                <div id="modal-live-preview-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raghav Assigner Control Panel Drawer Area -->
+    <div class="management-drawer" id="config-drawer-panel">
+        <div class="drawer-header">
+            <h3 style="font-weight:700; font-size:1.1rem;">Task Parameter Management</h3>
+            <button onclick="dismissActiveDrawerPanel()" style="background:transparent; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted);">✕</button>
+        </div>
+        <div class="drawer-content">
+            <div class="field-group">
+                <label>Task Title Frame</label>
+                <input type="text" id="field-edit-title" class="form-control-input" oninput="updateActiveCardMemory('title', this.value)">
+            </div>
+            <div class="field-group">
+                <label>Context Blueprint Tag</label>
+                <input type="text" id="field-edit-tag" class="form-control-input" oninput="updateActiveCardMemory('tag', this.value)">
+            </div>
+            <div class="field-group">
+                <label>Priority Allocation State</label>
+                <select id="field-edit-priority" class="form-control-input" onchange="updateActiveCardMemory('priority', this.value)">
+                    <option value="high">High Allocation Line</option>
+                    <option value="mid">Mid Allocation Frame</option>
+                    <option value="low">Low Allocation Frame</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label style="color:var(--accent);">Subtask Milestone Checklist</label>
+                <div style="display:flex; flex-direction:column; gap:8px;" id="drawer-subtasks-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Option A: Alex Simplified Assignee Check-Off Panel Drawer -->
+    <div class="management-drawer" id="alex-checkoff-panel" style="border-left: 4px solid var(--accent);">
+        <div class="drawer-header" style="background: #faf5ff;">
+            <div>
+                <h3 style="font-weight:700; font-size:1.1rem; color: var(--accent);" id="alex-panel-title">Task Completion Board</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted);" id="alex-panel-meta">Context Profile Checklist</p>
+            </div>
+            <button onclick="dismissActiveDrawerPanel()" style="background:transparent; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted);">✕</button>
+        </div>
+        <div class="drawer-content" style="background: #fdfcff;">
+            <div class="field-group">
+                <label style="color: var(--accent); margin-bottom: 0.5rem;">Interactive Milestone Targets</label>
+                <div id="alex-panel-checklists-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRoleContext = "Raghav";
+        let activeHorizonFilter = "all";
+        let selectedTaskObjectRef = null;
+        let activeTargetedSubIndex = null;
+        
+        const systemTodayStr = "2026-06-01"; 
+        const currentSimulatedTime = "14:15"; 
+
+        // Primary Database Master Storage Records Matrix
+        const taskDatabase = [
+            {
+                id: 101, title: "Manual of Life: Workshop Launch Day 0", tag: "MOL", assignee: "Alex", priority: "high", horizon: "today",
+                subtasks: [
+                    { id: 1, text: "Morning Intentions Alignment Mapping", date: "2026-06-01", time: "09:00", done: true },
+                    { id: 2, text: "Midday Core Metric Audit Analysis", date: "2026-05-30", time: "12:00", done: false }, 
+                    { id: 3, text: "Evening Journal Refraction Capture", date: "2026-06-01", time: "14:30", done: false }  
+                ]
+            },
+            {
+                id: 102, title: "Manual of Life Verification Launch", tag: "MOL", assignee: "Alex", priority: "mid", horizon: "today",
+                subtasks: [
+                    { id: 1, text: "Somatic Habit Loop Configuration Check", date: "2026-05-28", time: "10:00", done: false }, 
+                    { id: 2, text: "Core Metrics Validation Track", date: "2026-06-01", time: "16:00", done: false },
+                    { id: 3, text: "Future Roadmap Refraction Window", date: "2026-06-05", time: "11:00", done: false }
+                ]
+            }
+        ];
+
+        function swapSessionEnvironment(targetRole) {
+            currentRoleContext = targetRole;
+            const title = document.getElementById('user-display-title');
+            dismissActiveDrawerPanel();
+            dismissCreationModal();
+            
+            if (targetRole === "Raghav") {
+                document.body.className = "raghav-view";
+                title.textContent = "Raghav's Command Deck";
+            } else {
+                document.body.className = "alex-view";
+                title.textContent = "Alex's Assignment Queue";
+            }
+            renderWorkshopFeed();
+        }
+
+        // Expanded Token Parser Engine with full Time Extraction Logic ($hh:mm)
+        function executeModalTokenParser(inputElement, type, trackingIndex) {
+            let rawString = inputElement.value;
+            
+            // Extract Time Token inline dynamically if matched ($14:30 or $09:00)
+            const timeRegex = /\$(\d{2}:\d{2})/;
+            const timeMatch = rawString.match(timeRegex);
+            if (timeMatch) {
+                const extractedTime = timeMatch[1];
+                rawString = rawString.replace(timeRegex, '').trim();
+                inputElement.value = rawString + " "; // Normalize ending structure space
+
+                if (type === 'main') {
+                    document.getElementById('modal-meta-time').value = extractedTime;
+                } else if (type === 'sub') {
+                    const rows = document.querySelectorAll('#modal-subtask-stack .subtask-builder-row');
+                    if (rows[trackingIndex]) {
+                        rows[trackingIndex].querySelector('.subtask-time-input').value = extractedTime;
+                    }
+                }
+            }
+
+            const pieces = rawString.split(" ");
+            const lastWord = pieces[pieces.length - 1];
+            const menu = document.getElementById('modal-suggest-box');
+            menu.style.display = "none";
+
+            if (lastWord.startsWith("@")) {
+                const members = ["Alex", "Raghav"];
+                menu.innerHTML = members.map(m => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'assignee', '${m}', ${trackingIndex})">👤 ${m}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("#")) {
+                const tags = ["MOL", "SYS", "Habits", "Metrics"];
+                menu.innerHTML = tags.map(t => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'tag', '${t}', ${trackingIndex})">🏷️ #${t}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("!")) {
+                const priorities = ["high", "mid", "low"];
+                menu.innerHTML = priorities.map(p => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'priority', '${p}', ${trackingIndex})">⚡ !${p}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("?")) {
+                inputElement.value = rawString.slice(0, -1);
+                if (type === 'sub') {
+                    activeTargetedSubIndex = trackingIndex;
+                    const calSub = document.getElementById('hidden-cal-sub');
+                    calSub.onchange = function() {
+                        injectParsedTokenValue('sub', 'date', this.value, activeTargetedSubIndex);
+                    };
+                    calSub.showPicker();
+                }
+            }
+            syncModalLivePreview();
+        }
+
+        function showFloatingMenu(input, menu) {
+            menu.style.display = "block";
+            menu.style.left = `${Math.min(input.offsetLeft + 10, input.parentElement.offsetWidth - 230)}px`;
+            menu.style.top = `${input.offsetTop + input.offsetHeight + 4}px`;
+        }
+
+        function injectParsedTokenValue(contextType, field, value, subIndex) {
+            document.getElementById('modal-suggest-box').style.display = "none";
+            
+            if (contextType === 'main') {
+                let input = document.getElementById('modal-input-title');
+                let words = input.value.split(" "); words.pop();
+                input.value = words.join(" ") + " ";
+                if (field === 'assignee') document.getElementById('modal-meta-assignee').value = value;
+                if (field === 'tag') document.getElementById('modal-meta-tag').value = value;
+                if (field === 'priority') document.getElementById('modal-meta-priority').value = value;
+                input.focus();
+            } else if (contextType === 'sub') {
+                let rowInput = document.querySelectorAll('.subtask-txt-input')[subIndex];
+                let words = rowInput.value.split(" "); words.pop();
+                rowInput.value = words.join(" ") + " ";
+                if (field === 'date') rowInput.parentElement.querySelector('.subtask-date-input').value = value;
+                rowInput.focus();
+            }
+            syncModalLivePreview();
+        }
+
+        function calculateCalculatedHorizon(subtaskList) {
+            if (subtaskList.length === 0) return "upcoming";
+            const totalActive = subtaskList.filter(s => !s.done);
+            if (totalActive.length === 0) return "upcoming"; 
+
+            const overdueActive = totalActive.filter(s => s.date < systemTodayStr);
+            const standardActive = totalActive.filter(s => s.date >= systemTodayStr);
+
+            if (overdueActive.length > 0 && standardActive.length === 0) return "overdue";
+            return standardActive.some(s => s.date === systemTodayStr) ? "today" : "upcoming";
+        }
+
+        function appendSubtaskFormRow(txt = "", dte = "2026-06-01", tme = "12:00") {
+            const container = document.getElementById('modal-subtask-stack');
+            const idx = container.children.length;
+            const row = document.createElement('div');
+            row.className = "subtask-builder-row";
+            row.innerHTML = `
+                <input type="text" class="subtask-txt-input" placeholder="Subtask details... ($14:00)" value="${txt}" oninput="executeModalTokenParser(this, 'sub', ${idx})">
+                <input type="date" class="subtask-date-input" value="${dte}" onchange="syncModalLivePreview()">
+                <input type="text" class="subtask-time-input" value="${tme}" style="font-family:monospace; text-align:center; background:#f1f5f9; border-radius:4px;" onstyle="width:55px;" oninput="syncModalLivePreview()">
+                <button onclick="this.parentElement.remove(); syncModalLivePreview();" style="border:none; background:transparent; color:var(--danger); cursor:pointer; font-weight:700;">✕</button>
+            `;
+            container.appendChild(row);
+            syncModalLivePreview();
+        }
+
+        function buildStagedTaskFromInputs() {
+            const subRows = document.querySelectorAll('#modal-subtask-stack .subtask-builder-row');
+            const globalTime = document.getElementById('modal-meta-time').value;
+            
+            const parsedSubtasks = Array.from(subRows).map((row, i) => ({
+                id: i + 1,
+                text: row.querySelector('.subtask-txt-input').value || "Checklist Objective Milestone",
+                date: row.querySelector('.subtask-date-input').value || systemTodayStr,
+                time: row.querySelector('.subtask-time-input').value || globalTime || "12:00",
+                done: false
+            }));
+
+            return {
+                id: Date.now(),
+                title: document.getElementById('modal-input-title').value || "Untitled Framework Base",
+                tag: document.getElementById('modal-meta-tag').value,
+                assignee: document.getElementById('modal-meta-assignee').value,
+                priority: document.getElementById('modal-meta-priority').value,
+                subtasks: parsedSubtasks,
+                horizon: calculateCalculatedHorizon(parsedSubtasks)
+            };
+        }
+
+        function syncModalLivePreview() {
+            const simulatedCard = buildStagedTaskFromInputs();
+            document.getElementById('modal-live-preview-box').innerHTML = compileCardMarkup(simulatedCard, true);
+        }
+
+        // Core Window Setup Access Points
+        function launchCreationModal() {
+            document.getElementById('creation-modal').classList.add('active');
+            document.getElementById('modal-subtask-stack').innerHTML = "";
+            document.getElementById('modal-input-title').value = "";
+            document.getElementById('modal-meta-time').value = "12:00";
+            appendSubtaskFormRow("Triage Step 1 (e.g. $14:30)", "2026-06-01", "14:30");
+            syncModalLivePreview();
+        }
+
+        function dismissCreationModal() {
+            document.getElementById('creation-modal').classList.remove('active');
+            document.getElementById('modal-suggest-box').style.display = "none";
+        }
+
+        function commitStagedModalCard() {
+            taskDatabase.push(buildStagedTaskFromInputs());
+            dismissCreationModal(); renderWorkshopFeed();
+        }
+
+        function handleWorkspaceInteractionRouter(taskId) {
+            const targetTask = taskDatabase.find(t => t.id === taskId);
+            if (!targetTask) return;
+            selectedTaskObjectRef = targetTask;
+
+            if (currentRoleContext === "Raghav") {
+                document.body.classList.add('panel-open');
+                document.getElementById('config-drawer-panel').classList.add('active');
+                document.getElementById('alex-checkoff-panel').classList.remove('active');
+                document.getElementById('field-edit-title').value = targetTask.title;
+                document.getElementById('field-edit-tag').value = targetTask.tag;
+                document.getElementById('field-edit-priority').value = targetTask.priority;
+                buildRaghavSubtaskListDrawer(targetTask);
+            } else {
+                document.body.classList.add('panel-open');
+                document.getElementById('alex-checkoff-panel').classList.add('active');
+                document.getElementById('config-drawer-panel').classList.remove('active');
+                document.getElementById('alex-panel-title').textContent = targetTask.title;
+                document.getElementById('alex-panel-meta').textContent = `Scope: #${targetTask.tag} | Allocation Level: ${targetTask.priority.toUpperCase()}`;
+                buildAlexChecklistDrawer(targetTask);
+            }
+            renderWorkshopFeed();
+        }
+
+        function buildRaghavSubtaskListDrawer(task) {
+            const container = document.getElementById('drawer-subtasks-container');
+            container.innerHTML = task.subtasks.map(sub => `
+                <div style="display:flex; align-items:center; gap:8px; background:#f8fafc; padding:6px; border-radius:4px;">
+                    <input type="checkbox" ${sub.done ? 'checked' : ''} onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)">
+                    <input type="text" class="form-control-input" style="flex:1; padding:4px;" value="${sub.text}" oninput="updateSubtaskTextMemory(${task.id}, ${sub.id}, this.value)">
+                    <input type="text" value="${sub.time}" style="font-family:monospace; width:50px; text-align:center; border:1px solid var(--border-color); border-radius:4px;" oninput="updateSubtaskTimeMemory(${task.id}, ${sub.id}, this.value)">
+                    <span class="subtask-date-badge">${sub.date}</span>
+                </div>
+            `).join('');
+        }
+
+        function buildAlexChecklistDrawer(task) {
+            const container = document.getElementById('alex-panel-checklists-container');
+            container.innerHTML = task.subtasks.map(sub => `
+                <div class="alex-check-row">
+                    <div class="alex-check-left">
+                        <input type="checkbox" ${sub.done ? 'checked' : ''} onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)">
+                        <span style="${sub.done ? 'text-decoration: line-through; color:var(--text-muted);' : ''}">${sub.text}</span>
+                    </div>
+                    <span class="subtask-date-badge ${sub.date < systemTodayStr ? 'is-overdue' : (sub.date === systemTodayStr ? 'is-today' : '')}">
+                        ${sub.date === systemTodayStr ? `Today @ ${sub.time}` : sub.date}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateSubtaskTextMemory(taskId, subtaskId, newTxt) {
+            const parent = taskDatabase.find(t => t.id === taskId);
+            if (parent) {
+                const sub = parent.subtasks.find(s => s.id === subtaskId);
+                if (sub) sub.text = newTxt;
+            }
+        }
+
+        function updateSubtaskTimeMemory(taskId, subtaskId, newTime) {
+            const parent = taskDatabase.find(t => t.id === taskId);
+            if (parent) {
+                const sub = parent.subtasks.find(s => s.id === subtaskId);
+                if (sub) sub.time = newTime;
+                renderWorkshopFeed();
+            }
+        }
+
+        function updateActiveCardMemory(field, value) {
+            if (!selectedTaskObjectRef || currentRoleContext !== "Raghav") return;
+            selectedTaskObjectRef[field] = value;
+            selectedTaskObjectRef.horizon = calculateCalculatedHorizon(selectedTaskObjectRef.subtasks);
+            renderWorkshopFeed();
+        }
+
+        function dismissActiveDrawerPanel() {
+            selectedTaskObjectRef = null;
+            document.body.classList.remove('panel-open');
+            document.getElementById('config-drawer-panel').classList.remove('active');
+            document.getElementById('alex-checkoff-panel').classList.remove('active');
+            renderWorkshopFeed();
+        }
+
+        function toggleSubtaskState(taskId, subtaskId, isChecked) {
+            const parent = taskDatabase.find(t => t.id === taskId);
+            if (!parent) return;
+            const sub = parent.subtasks.find(s => s.id === subtaskId);
+            if (sub) sub.done = isChecked;
+
+            parent.horizon = calculateCalculatedHorizon(parent.subtasks);
+            renderWorkshopFeed();
+
+            if (selectedTaskObjectRef && selectedTaskObjectRef.id === taskId) {
+                if (currentRoleContext === "Raghav") buildRaghavSubtaskListDrawer(parent);
+                else buildAlexChecklistDrawer(parent);
+            }
+        }
+
+        function updateHorizonBadgeMetrics() {
+            const roleFilter = (t) => currentRoleContext === "Raghav" || t.assignee === "Alex";
+            document.getElementById('count-overdue').textContent = taskDatabase.filter(t => roleFilter(t) && t.horizon === 'overdue').length;
+            document.getElementById('count-today').textContent = taskDatabase.filter(t => roleFilter(t) && t.horizon === 'today').length;
+            document.getElementById('count-upcoming').textContent = taskDatabase.filter(t => roleFilter(t) && t.horizon === 'upcoming').length;
+        }
+
+        function filterHorizon(horizonType, btn) {
+            document.querySelectorAll('.horizon-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active'); activeHorizonFilter = horizonType; renderWorkshopFeed();
+        }
+
+        function compileCardMarkup(task, isStaticPreview = false) {
+            const total = task.subtasks.length;
+            const completed = task.subtasks.filter(s => s.done).length;
+            const progress = total ? Math.round((completed / total) * 100) : 0;
+            const isSelected = selectedTaskObjectRef && selectedTaskObjectRef.id === task.id;
+
+            const futureOrDoneSubtasks = task.subtasks.filter(s => s.done || s.date >= systemTodayStr);
+
+            const subtasksMarkup = futureOrDoneSubtasks.map(sub => {
+                let timeMod = "";
+                if (!sub.done && sub.date === systemTodayStr && sub.time >= "14:00" && sub.time <= "14:45") {
+                    timeMod = "is-immediate";
+                } else if (sub.date === systemTodayStr) {
+                    timeMod = "is-today";
+                }
+                return `
+                    <div class="subtask-item">
+                        <div class="subtask-left">
+                            <input type="checkbox" ${sub.done ? 'checked' : ''} ${isStaticPreview ? 'disabled' : ''} onclick="event.stopPropagation();" onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)">
+                            <span style="${sub.done ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${sub.text}</span>
+                        </div>
+                        <span class="subtask-date-badge ${timeMod}">🕒 ${sub.time}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="task-card priority-${task.priority} ${isSelected ? 'selected-active' : ''}" onclick="${isStaticPreview ? '' : `handleWorkspaceInteractionRouter(${task.id})`}">
+                    <div class="card-header">
+                        <div><span class="tag-pill">#${task.tag}</span> <span class="priority-pill p-${task.priority}">${task.priority}</span></div>
+                        <span class="horizon-tag tag-${task.horizon}">${task.horizon}</span>
+                    </div>
+                    <div class="card-title">${task.title}</div>
+                    <div class="subtasks-timeline">${subtasksMarkup || '<div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">(All actions extracted to timeline layers)</div>'}</div>
+                    <div class="progress-bar-container"><div class="progress-bar-fill" style="width:${progress}%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:700; color:var(--text-muted);">
+                        <span>Operational Metric</span><span>${progress}%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWorkshopFeed() {
+            const listGrid = document.getElementById('master-render-list');
+            const overdueDock = document.getElementById('global-overdue-dock');
+            const overdueStack = document.getElementById('overdue-extracted-injection-stack');
+            const immediateDock = document.getElementById('global-immediate-dock');
+            const immediateStack = document.getElementById('immediate-seva-injection-stack');
+            const railPoint = document.getElementById('chrono-rail-injection-point');
+            
+            listGrid.innerHTML = ""; overdueStack.innerHTML = ""; immediateStack.innerHTML = ""; railPoint.innerHTML = "";
+            updateHorizonBadgeMetrics();
+
+            let overdueExtractionCount = 0;
+            let immediateExtractionCount = 0;
+
+            taskDatabase.forEach(task => {
+                if (currentRoleContext === "Alex" && task.assignee !== "Alex") return;
+
+                // Triage Layer 1: Overdue Extractors
+                const overdueNodes = task.subtasks.filter(s => !s.done && s.date < systemTodayStr);
+                overdueNodes.forEach(sub => {
+                    overdueExtractionCount++;
+                    const row = document.createElement('div');
+                    row.className = `task-card priority-${task.priority}`;
+                    row.onclick = () => handleWorkspaceInteractionRouter(task.id);
+                    row.innerHTML = `
+                        <div class="card-header">
+                            <span class="tag-pill" style="background:var(--danger-bg); color:var(--danger);">OVERDUE: ${task.title}</span>
+                            <span class="priority-pill p-${task.priority}">${task.priority}</span>
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">${sub.text}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="subtask-date-badge is-overdue">📅 Missed: ${sub.date}</span>
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--success); cursor:pointer;" onclick="event.stopPropagation();">
+                                <input type="checkbox" onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)"> Complete Milestone
+                            </label>
+                        </div>
+                    `;
+                    overdueStack.appendChild(row);
+                });
+
+                // Triage Layer 2: Immediate 30-Min Track Accelerators (14:15 relative checkpoint limits)
+                const immediateNodes = task.subtasks.filter(s => {
+                    if (s.done || s.date !== systemTodayStr) return false;
+                    return (s.time >= "14:00" && s.time <= "14:45");
+                });
+
+                immediateNodes.forEach(sub => {
+                    immediateExtractionCount++;
+                    const row = document.createElement('div');
+                    row.className = `task-card priority-${task.priority}`;
+                    row.onclick = () => handleWorkspaceInteractionRouter(task.id);
+                    row.innerHTML = `
+                        <div class="card-header">
+                            <span class="tag-pill" style="background:#ffedd5; color:#ea580c;">⚠️ EXPIRING SOON: ${task.title}</span>
+                            <span class="priority-pill p-${task.priority}">${task.priority}</span>
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">${sub.text}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="subtask-date-badge is-immediate">⏰ Execution Deadline: ${sub.time}</span>
+                            <label style="font-size:0.75rem; font-weight:700; color:var(--success); cursor:pointer;" onclick="event.stopPropagation();">
+                                <input type="checkbox" onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)"> Complete Now
+                            </label>
+                        </div>
+                    `;
+                    immediateStack.appendChild(row);
+                });
+
+                // Triage Layer 3: Horizontal Timeline Rails
+                task.subtasks.forEach(sub => {
+                    if (sub.date === systemTodayStr) {
+                        const node = document.createElement('div');
+                        node.className = "chrono-node";
+                        node.onclick = () => handleWorkspaceInteractionRouter(task.id);
+                        node.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="chrono-time">${sub.time}</span>
+                                <span style="font-size:0.65rem; font-weight:bold; color:var(--text-muted);">${sub.done ? '✅ DONE' : '⏳ PENDING'}</span>
+                            </div>
+                            <div class="chrono-desc">${sub.text}</div>
+                        `;
+                        railPoint.appendChild(node);
+                    }
+                });
+
+                // Main Horizon Target Feed lists
+                if (activeHorizonFilter === "all" || task.horizon === activeHorizonFilter) {
+                    const li = document.createElement('li');
+                    li.innerHTML = compileCardMarkup(task, false);
+                    listGrid.appendChild(li);
+                }
+            });
+
+            overdueDock.classList.toggle('active', overdueExtractionCount > 0);
+            immediateDock.classList.toggle('active', immediateExtractionCount > 0);
+        }
+
+        renderWorkshopFeed();
+    </script>
+</body>
+</html>

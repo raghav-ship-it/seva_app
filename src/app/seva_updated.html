@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seva Premium - Intelligent Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #fafafa;
+            --sidebar-bg: #fafafa;
+            --text-main: #202020;
+            --text-muted: #666666;
+            --accent: #db4c3f;
+            --accent-hover: #b03d32;
+            --border-color: #f0f0f0;
+            --success: #058527;
+            --warning: #eb8909;
+            --danger: #d1453b;
+            --radius: 8px;
+        }
+
+        .dark-theme {
+            --bg-primary: #1f1f1f;
+            --bg-secondary: #282828;
+            --sidebar-bg: #282828;
+            --text-main: #ffffff;
+            --text-muted: #b3b3b3;
+            --border-color: #333333;
+            --accent: #ff7066;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+        }
+
+        .app-wrapper {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        @media (max-width: 768px) {
+            .app-wrapper { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+        }
+
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: background 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--border-color);
+        }
+
+        .nav-item i { width: 18px; text-align: center; }
+
+        .main-content {
+            padding: 40px 60px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Task Items */
+        .task-item {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+            animation: fadeIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #666;
+            border-radius: 50%;
+            margin-top: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .checkbox:hover { background: rgba(0,0,0,0.05); }
+        .checkbox.checked { background: var(--success); border-color: var(--success); }
+        .checkbox.checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 10px; }
+
+        .task-content { flex: 1; }
+        .task-name { font-size: 14px; margin-bottom: 4px; font-weight: 500; }
+        .task-item.done .task-name { text-decoration: line-through; color: var(--text-muted); }
+        
+        .tag-pill { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; background: var(--bg-secondary); border: 1px solid var(--border-color); }
+        .status-badge { font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-right: 6px; }
+        .status-pending { background: #e2e8f0; color: #475569; }
+        .status-progress { background: #dbeafe; color: #1e40af; }
+        .status-review { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        
+        .priority-p1 { border-left: 3px solid #d1453b; padding-left: 12px; }
+        .priority-p2 { border-left: 3px solid #eb8909; padding-left: 12px; }
+        .priority-p3 { border-left: 3px solid #246fe0; padding-left: 12px; }
+
+        .overdue { color: var(--danger) !important; font-weight: 700; }
+
+        /* FAB */
+        .fab {
+    position: fixed;
+    bottom: 24px;  /* Slightly adjusted for mobile safety screens */
+    right: 24px;   /* Slightly adjusted for mobile safety screens */
+    width: 56px;
+    height: 56px;
+    background: var(--accent);
+    color: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 8px 24px rgba(219, 76, 63, 0.35);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 99999; /* Boosted significantly to stay above main-content layers */
+} 
+        .fab:hover {
+            transform: scale(1.1) translateY(-4px);
+            background: var(--accent-hover);
+            box-shadow: 0 12px 32px rgba(219, 76, 63, 0.45);
+        }
+        .fab:focus {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 0 0 4px rgba(219,76,63,0.18);
+            outline: none;
+        }
+
+        /* Token Parser Autocomplete */
+        .autocomplete-menu {
+            position: absolute;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 2000;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 220px;
+        }
+
+        .menu-item {
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .menu-item:hover { background: var(--bg-secondary); color: var(--accent); }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-primary);
+            width: 550px;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .input-title { width: 100%; border: none; font-size: 18px; font-weight: 600; outline: none; background: transparent; color: var(--text-main); }
+        .input-desc { width: 100%; border: none; font-size: 13px; outline: none; margin-top: 8px; background: transparent; color: var(--text-main); }
+
+        /* Identity Switcher */
+        .identity-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .admin-badge { background: #fee2e2; color: #b91c1c; }
+        .user-badge { background: #dcfce7; color: #15803d; }
+
+        /* "My Day" Button */
+        .my-day-toggle {
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.2s;
+            font-size: 16px;
+        }
+        .my-day-toggle.active { color: #f59e0b; }
+
+        /* Reminder Alert */
+        #reminder-alert { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* Token Carousel */
+        .token-carousel-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .carousel-nav-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .carousel-nav-btn:hover {
+            background: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .carousel-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .token-carousel {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            flex: 1;
+            padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .token-carousel::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .token-carousel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .token-carousel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .token-btn {
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .token-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="light-theme">
+
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="flex items-center justify-between px-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <span class="font-bold">Seva</span>
+                </div>
+                <button onclick="toggleTheme()" class="text-muted hover:text-main"><i class="fas fa-moon"></i></button>
+            </div>
+
+            <div class="px-3 mb-6">
+                <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Switch Identity</p>
+                <select id="user-select" class="w-full text-xs p-2 rounded border border-color outline-none bg-transparent font-bold" onchange="switchUser(this.value)">
+                </select>
+            </div>
+
+            <nav>
+                <div class="nav-item active" onclick="setFilter('myday')">
+                    <i class="fas fa-sun text-yellow-500"></i>
+                    <span>Today</span>
+                </div>
+                <div class="nav-item" onclick="setFilter('inbox')">
+                    <i class="fas fa-inbox text-blue-500"></i>
+                    <span>Inbox</span>
+                </div>
+                <div class="nav-item" onclick="setFilter('today')">
+                    <i class="fas fa-calendar-day text-green-500"></i>
+                    <span>Upcoming</span>
+                </div>
+                <div class="nav-item" id="nav-everyone" onclick="setFilter('everyone')">
+                    <i class="fas fa-users text-purple-500"></i>
+                    <span>Everyone</span>
+                </div>
+            </nav>
+
+            <div class="mt-8">
+                <div class="px-3 mb-2 flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    <span>Projects</span>
+                    <button onclick="addProject()" class="hover:text-main"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="project-list"></div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header-title">
+                <div class="flex flex-col">
+                    <span id="view-title">Today</span>
+                    <span id="view-subtitle" class="text-xs font-normal text-muted mt-1">Focus on what matters most</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="clear-my-day-btn" class="text-xs font-bold text-orange-500 hover:underline hidden" onclick="clearMyDay()"><i class="fas fa-magic"></i> Clear My Day</button>
+                    <button class="text-sm text-gray-400 hover:text-red-500" onclick="clearCompleted()"><i class="fas fa-broom"></i> Clear Completed</button>
+                </div>
+            </header>
+
+            <div id="task-container" class="flex flex-col"></div>
+
+            <!-- Due Today Suggestions (only on My Day view) -->
+            <div id="suggestions-area" class="mt-12 hidden">
+                <h3 class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest border-b border-color pb-2">Due Today (Not in Today)</h3>
+                <div id="suggestions-list" class="flex flex-col"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Universal FAB -->
+    <button class="fab" type="button" aria-label="Add Task" onclick="openModal()">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+    </button>
+
+    <!-- Quick Entry Modal -->
+    <div class="modal" id="task-modal">
+        <div class="modal-content">
+            <div class="relative">
+                <input type="text" id="modal-task-title" class="input-title" placeholder="e.g. Update report @Sarah #Work !1" oninput="handleTokenInput(this)">
+                <div id="autocomplete-box" class="autocomplete-menu hidden"></div>
+            </div>
+            <textarea id="modal-task-desc" class="input-desc" placeholder="Notes..."></textarea>
+            
+            <div class="flex flex-col gap-2 mt-6">
+                <div class="text-[11px] font-bold text-gray-400 uppercase">Quick Token Shortcuts:</div>
+                <div class="token-carousel-container">
+                    <button type="button" class="carousel-nav-btn" id="carousel-prev" onclick="scrollCarousel('left')" title="Scroll left">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="token-carousel" id="token-carousel">
+                        <button type="button" class="token-btn" onclick="triggerAssigneeMenu()" title="Assign users (Admin only)">
+                            <i class="fas fa-user"></i> @ User
+                        </button>
+                        <button type="button" class="token-btn" onclick="triggerTagMenu()" title="Add tags">
+                            <i class="fas fa-hashtag"></i> # Tag
+                        </button>
+                        <button type="button" class="token-btn" onclick="triggerPriorityMenu()" title="Set priority">
+                            <i class="fas fa-flag"></i> ! Prio
+                        </button>
+                        <button type="button" class="token-btn" onclick="triggerDatePicker()" title="Set due date">
+                            <i class="fas fa-calendar"></i> ? Due
+                        </button>
+                        <button type="button" class="token-btn" onclick="triggerReminderMenu()" title="Add reminder">
+                            <i class="fas fa-bell"></i> + Alert
+                        </button>
+                        <button type="button" class="token-btn" onclick="triggerRecurrenceMenu()" title="Add recurrence">
+                            <i class="fas fa-redo"></i> * Recur
+                        </button>
+                    </div>
+                    <button type="button" class="carousel-nav-btn" id="carousel-next" onclick="scrollCarousel('right')" title="Scroll right">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Meta Visualization in Modal -->
+            <div id="modal-meta-pills" class="flex flex-wrap gap-2 mt-4 min-h-[24px]"></div>
+
+            <input type="datetime-local" id="hidden-date-picker" class="absolute opacity-0 pointer-events-none">
+
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-color">
+                <button class="px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-100 rounded" onclick="closeModal()">Cancel</button>
+                <button class="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded hover:bg-red-700 shadow-sm" onclick="saveTask()">Add task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reminder Alert Overlay -->
+    <div id="reminder-alert" class="fixed top-4 right-4 z-[2000] hidden">
+        <div class="bg-white border-l-4 border-yellow-500 shadow-2xl p-4 rounded-r-lg flex items-center gap-4 animate-bounce">
+            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-xs font-bold text-gray-400 uppercase">Alert</p>
+                <p id="reminder-task-name" class="text-sm font-bold text-gray-900"></p>
+            </div>
+            <button onclick="dismissAlert()" class="text-gray-400 hover:text-gray-600 px-2">✕</button>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let state = {
+            users: [
+                { id: 'u_1', name: 'Aditya (Admin)', role: 'admin' },
+                { id: 'u_2', name: 'Sarah (User)', role: 'user' },
+                { id: 'u_3', name: 'John (User)', role: 'user' }
+            ],
+            currentUser: null,
+            tasks: [],
+            projects: ['Work', 'Personal', 'Shopping'],
+            tags: ['Marketing', 'Urgent', 'Low-effort'],
+            currentFilter: 'myday',
+            theme: 'light',
+        };
+
+        // Active Staging for Quick Entry
+        let stagedTask = {
+            title: '', assigneeId: null, tags: [], priority: 'p4', dueDate: null, reminder: null, recurrence: null, myDay: false
+        };
+
+        // Initialize
+        function init() {
+            const saved = localStorage.getItem('seva_v4_state');
+            if (saved) state = JSON.parse(saved);
+            if (!state.currentUser) state.currentUser = state.users[0];
+            
+            populateUserSwitcher();
+            render();
+            setInterval(checkReminders, 30000);
+        }
+
+        function save() { localStorage.setItem('seva_v4_state', JSON.stringify(state)); }
+
+        function populateUserSwitcher() {
+            const select = document.getElementById('user-select');
+            select.innerHTML = state.users.map(u => `<option value="${u.id}" ${u.id === state.currentUser.id ? 'selected' : ''}>${u.name}</option>`).join('');
+            updateIdentityUI();
+        }
+
+        function switchUser(id) {
+            state.currentUser = state.users.find(u => u.id === id);
+            updateIdentityUI();
+            render();
+            save();
+        }
+
+        function updateIdentityUI() {
+            const u = state.currentUser;
+            const nameEl = document.getElementById('current-user-name');
+            const avatarEl = document.getElementById('current-user-avatar');
+            const badgeEl = document.getElementById('current-user-role-badge');
+            
+            if (nameEl) nameEl.textContent = u.name.split(' (')[0];
+            if (avatarEl) avatarEl.textContent = u.name.charAt(0);
+            if (badgeEl) {
+                badgeEl.textContent = u.role;
+                badgeEl.className = `identity-badge ${u.role === 'admin' ? 'admin-badge' : 'user-badge'}`;
+            }
+            document.getElementById('nav-everyone').style.display = u.role === 'admin' ? 'flex' : 'none';
+        }
+
+        // --- Token Parser System ---
+        function handleTokenInput(el) {
+            const val = el.value;
+            const menu = document.getElementById('autocomplete-box');
+            menu.classList.add('hidden');
+            
+            const words = val.split(' ');
+            const lastWord = words[words.length - 1];
+            
+            if (lastWord.startsWith('@')) {
+                if (state.currentUser.role !== 'admin') return;
+                const search = lastWord.slice(1).toLowerCase();
+                const filtered = state.users.filter(u => u.name.toLowerCase().includes(search));
+                showMenu(filtered.map(u => ({ label: u.name, val: u.id, icon: 'user' })), 'assignee');
+            } else if (lastWord.startsWith('#')) {
+                const search = lastWord.slice(1).toLowerCase();
+                const filtered = state.tags.filter(t => t.toLowerCase().includes(search));
+                showMenu(filtered.map(t => ({ label: t, val: t, icon: 'hashtag' })), 'tag');
+            } else if (lastWord.startsWith('!')) {
+                showMenu([
+                    { label: 'Priority 1', val: 'p1', icon: 'flag', color: 'text-red-500' },
+                    { label: 'Priority 2', val: 'p2', icon: 'flag', color: 'text-orange-500' },
+                    { label: 'Priority 3', val: 'p3', icon: 'flag', color: 'text-blue-500' },
+                    { label: 'Priority 4', val: 'p4', icon: 'flag', color: 'text-gray-400' }
+                ], 'priority');
+            } else if (lastWord.startsWith('?')) {
+                el.value = val.slice(0, -1);
+                document.getElementById('hidden-date-picker').showPicker();
+                document.getElementById('hidden-date-picker').onchange = (e) => {
+                    stagedTask.dueDate = e.target.value;
+                    syncMetaPills();
+                };
+            } else if (lastWord.startsWith('+')) {
+                showMenu([
+                    { label: 'At time of due', val: '0', icon: 'bell' },
+                    { label: '10m before', val: '10', icon: 'bell' },
+                    { label: '30m before', val: '30', icon: 'bell' },
+                    { label: '1h before', val: '60', icon: 'bell' }
+                ], 'reminder');
+            } else if (lastWord.startsWith('*')) {
+                showMenu([
+                    { label: 'Daily', val: 'daily', icon: 'redo' },
+                    { label: 'Weekly', val: 'weekly', icon: 'redo' },
+                    { label: 'Monthly', val: 'monthly', icon: 'redo' }
+                ], 'recurrence');
+            }
+        }
+
+        function showMenu(items, type) {
+            const menu = document.getElementById('autocomplete-box');
+            if (items.length === 0) return;
+            menu.classList.remove('hidden');
+            menu.innerHTML = items.map(it => `
+                <div class="menu-item" onclick="applyToken('${type}', '${it.val}', '${it.label}')">
+                    <i class="fas fa-${it.icon} ${it.color || ''}"></i> ${it.label}
+                </div>
+            `).join('');
+        }
+
+        function applyToken(type, val, label) {
+            const input = document.getElementById('modal-task-title');
+            const text = input.value;
+            const tokenChars = ['@', '#', '!', '+', '*', '?'];
+            
+            // Find the last token character and append value directly to it (compact format)
+            let lastTokenIdx = -1;
+            for (let i = text.length - 1; i >= 0; i--) {
+                if (tokenChars.includes(text[i])) {
+                    lastTokenIdx = i;
+                    break;
+                }
+            }
+            
+            if (lastTokenIdx !== -1) {
+                // Append value directly to token without space: @aditya #work !p1
+                const newText = text.substring(0, lastTokenIdx + 1) + label + ' ' + text.substring(lastTokenIdx + 1);
+                input.value = newText;
+            }
+            
+            if (type === 'assignee') stagedTask.assigneeId = val;
+            if (type === 'tag') stagedTask.tags.push(val);
+            if (type === 'priority') stagedTask.priority = val;
+            if (type === 'reminder') stagedTask.reminder = val;
+            if (type === 'recurrence') stagedTask.recurrence = val;
+            
+            document.getElementById('autocomplete-box').classList.add('hidden');
+            syncMetaPills();
+            input.focus();
+        }
+
+        function syncMetaPills() {
+            const container = document.getElementById('modal-meta-pills');
+            container.innerHTML = '';
+            
+            if (stagedTask.assigneeId) {
+                const name = state.users.find(u => u.id === stagedTask.assigneeId).name;
+                container.innerHTML += `<span class="tag-pill text-blue-600"><i class="fas fa-user"></i> ${name}</span>`;
+            }
+            stagedTask.tags.forEach(t => {
+                container.innerHTML += `<span class="tag-pill text-purple-600"><i class="fas fa-hashtag"></i> ${t}</span>`;
+            });
+            if (stagedTask.dueDate) {
+                const date = new Date(stagedTask.dueDate).toLocaleDateString();
+                container.innerHTML += `<span class="tag-pill text-green-600"><i class="fas fa-calendar"></i> ${date}</span>`;
+            }
+            if (stagedTask.reminder) {
+                container.innerHTML += `<span class="tag-pill text-yellow-600"><i class="fas fa-bell"></i> ${stagedTask.reminder}m</span>`;
+            }
+            if (stagedTask.recurrence) {
+                container.innerHTML += `<span class="tag-pill text-purple-500"><i class="fas fa-redo"></i> ${stagedTask.recurrence}</span>`;
+            }
+            container.innerHTML += `<span class="tag-pill">${stagedTask.priority.toUpperCase()}</span>`;
+        }
+
+        // --- Rendering & Logic ---
+        function setFilter(f) {
+            state.currentFilter = f;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('task-container');
+            const suggestArea = document.getElementById('suggestions-area');
+            const suggestList = document.getElementById('suggestions-list');
+            const clearDayBtn = document.getElementById('clear-my-day-btn');
+            
+            container.innerHTML = '';
+            suggestList.innerHTML = '';
+            suggestArea.classList.add('hidden');
+            clearDayBtn.classList.add('hidden');
+
+            const isAdmin = state.currentUser.role === 'admin';
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            let tasks = state.tasks;
+
+            if (state.currentFilter === 'myday') {
+                document.getElementById('view-title').textContent = "Today";
+                document.getElementById('view-subtitle').textContent = "Personal focus list";
+                clearDayBtn.classList.remove('hidden');
+                
+                const myDayTasks = tasks.filter(t => t.myDay && t.assigneeId === state.currentUser.id && t.status !== 'completed');
+                myDayTasks.forEach(t => container.innerHTML += compileTaskMarkup(t));
+                
+                const dueTodayNotMyDay = tasks.filter(t => !t.myDay && t.dueDate?.startsWith(todayStr) && t.assigneeId === state.currentUser.id && t.status !== 'completed');
+                if (dueTodayNotMyDay.length > 0) {
+                    suggestArea.classList.remove('hidden');
+                    dueTodayNotMyDay.forEach(t => suggestList.innerHTML += compileTaskMarkup(t, true));
+                }
+            } else if (state.currentFilter === 'inbox') {
+                document.getElementById('view-title').textContent = "Inbox";
+                document.getElementById('view-subtitle').textContent = "Unorganized tasks";
+                tasks.filter(t => t.assigneeId === state.currentUser.id && t.status !== 'completed').forEach(t => container.innerHTML += compileTaskMarkup(t));
+            } else if (state.currentFilter === 'today') {
+                document.getElementById('view-title').textContent = "Today";
+                document.getElementById('view-subtitle').textContent = `Due on ${new Date().toLocaleDateString()}`;
+                tasks.filter(t => t.assigneeId === state.currentUser.id && t.dueDate?.startsWith(todayStr) && t.status !== 'completed').forEach(t => container.innerHTML += compileTaskMarkup(t));
+            } else if (state.currentFilter === 'everyone' && isAdmin) {
+                document.getElementById('view-title').textContent = "Everyone";
+                document.getElementById('view-subtitle').textContent = "Global visibility across all users";
+                tasks.filter(t => t.status !== 'completed').forEach(t => container.innerHTML += compileTaskMarkup(t, false, true));
+            }
+
+            if (container.innerHTML === '' && suggestArea.classList.contains('hidden')) {
+                container.innerHTML = `<div class="py-12 text-center text-gray-400 text-sm">Clear skies. No tasks found.</div>`;
+            }
+        }
+
+        function compileTaskMarkup(t, isSuggestion = false, showAssignee = false) {
+            const dDate = t.dueDate ? new Date(t.dueDate) : null;
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const isOverdue = dDate && dDate < now && !t.dueDate.startsWith(todayStr);
+            const assigneeName = state.users.find(u => u.id === t.assigneeId)?.name.split(' (')[0];
+            
+            const statusMap = {
+                'pending': { label: 'Pending', class: 'status-pending' },
+                'in_progress': { label: 'In Progress', class: 'status-progress' },
+                'review': { label: 'In Review', class: 'status-review' },
+                'completed': { label: 'Completed', class: 'status-completed' }
+            };
+            const s = statusMap[t.status] || statusMap.pending;
+
+            return `
+                <div class="task-item ${t.priority} ${t.status === 'completed' ? 'done' : ''}">
+                    <div class="checkbox ${t.status === 'completed' ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+                    <div class="task-content">
+                        <div class="task-name">
+                            <span class="status-badge ${s.class}">${s.label}</span>
+                            ${t.title}
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-1">
+                            ${t.dueDate ? `<span class="text-[10px] ${isOverdue ? 'text-red-500 font-bold' : 'text-green-600'}"><i class="fas fa-calendar"></i> ${dDate.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</span>` : ''}
+                            ${t.tags.map(tag => `<span class="tag-pill">${tag}</span>`).join('')}
+                            ${t.recurrence ? `<span class="tag-pill text-purple-500"><i class="fas fa-redo text-[8px]"></i> ${t.recurrence}</span>` : ''}
+                            ${showAssignee ? `<span class="tag-pill text-blue-500 font-bold"><i class="fas fa-user"></i> ${assigneeName}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select class="text-[10px] bg-transparent border border-color rounded px-1 outline-none" onchange="updateStatus(${t.id}, this.value)">
+                            <option value="pending" ${t.status==='pending'?'selected':''}>Pending</option>
+                            <option value="in_progress" ${t.status==='in_progress'?'selected':''}>Doing</option>
+                            <option value="review" ${t.status==='review'?'selected':''}>Review</option>
+                            <option value="completed" ${t.status==='completed'?'selected':''}>Done</option>
+                        </select>
+                        <i class="fas fa-sun my-day-toggle ${t.myDay ? 'active' : ''}" onclick="toggleMyDay(${t.id})" title="Add to Today"></i>
+                        <button class="text-gray-300 hover:text-red-500" onclick="deleteTask(${t.id})"><i class="fas fa-trash text-xs"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Actions
+        function openModal() {
+            stagedTask = { title: '', assigneeId: null, tags: [], priority: 'p4', dueDate: null, reminder: null, recurrence: null, myDay: state.currentFilter === 'myday' };
+            document.getElementById('task-modal').classList.add('active');
+            document.getElementById('modal-task-title').value = '';
+            document.getElementById('modal-task-desc').value = '';
+            document.getElementById('modal-meta-pills').innerHTML = '';
+            document.getElementById('modal-task-title').focus();
+        }
+
+        function closeModal() { document.getElementById('task-modal').classList.remove('active'); }
+
+        function saveTask() {
+            const title = document.getElementById('modal-task-title').value.trim();
+            if (!title) return;
+            
+            const task = {
+                id: Date.now(),
+                title: title,
+                desc: document.getElementById('modal-task-desc').value,
+                dueDate: stagedTask.dueDate,
+                priority: stagedTask.priority,
+                tags: stagedTask.tags,
+                assigneeId: stagedTask.assigneeId || state.currentUser.id,
+                creatorId: state.currentUser.id,
+                reminder: stagedTask.reminder,
+                recurrence: stagedTask.recurrence,
+                myDay: stagedTask.myDay,
+                status: 'pending',
+                notified: false
+            };
+            
+            state.tasks.unshift(task);
+            save(); closeModal(); render();
+        }
+
+        function toggleTask(id) {
+            const t = state.tasks.find(t => t.id === id);
+            if (t) {
+                if (t.status === 'completed') {
+                    t.status = 'pending';
+                } else {
+                    if (t.creatorId !== t.assigneeId && state.currentUser.role !== 'admin') {
+                        t.status = 'review';
+                    } else {
+                        t.status = 'completed';
+                    }
+
+                    if (t.status === 'completed' && t.recurrence) {
+                        setTimeout(() => {
+                            const nextDate = new Date(t.dueDate || new Date());
+                            if (t.recurrence === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+                            if (t.recurrence === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+                            if (t.recurrence === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+                            const clone = {...t, id: Date.now(), dueDate: nextDate.toISOString().slice(0, 16), status: 'pending', notified: false};
+                            state.tasks.unshift(clone);
+                            render(); save();
+                        }, 500);
+                    }
+                }
+                save(); render();
+            }
+        }
+
+        function updateStatus(id, status) {
+            const t = state.tasks.find(t => t.id === id);
+            if (t) { t.status = status; save(); render(); }
+        }
+
+        function toggleMyDay(id) {
+            const t = state.tasks.find(t => t.id === id);
+            if (t) { t.myDay = !t.myDay; save(); render(); }
+        }
+
+        function clearMyDay() {
+            state.tasks.forEach(t => { if (t.assigneeId === state.currentUser.id) t.myDay = false; });
+            save(); render();
+        }
+
+        function deleteTask(id) {
+            state.tasks = state.tasks.filter(t => t.id !== id);
+            save(); render();
+        }
+
+        function clearCompleted() {
+            state.tasks = state.tasks.filter(t => !(t.assigneeId === state.currentUser.id && t.status === 'completed'));
+            save(); render();
+        }
+
+        function checkReminders() {
+            const now = new Date();
+            state.tasks.forEach(t => {
+                if (t.status === 'completed' || t.notified || !t.reminder || !t.dueDate || t.assigneeId !== state.currentUser.id) return;
+                const due = new Date(t.dueDate);
+                const remTime = new Date(due.getTime() - (parseInt(t.reminder) * 60000));
+                if (now >= remTime) {
+                    t.notified = true;
+                    showReminder(t);
+                    save();
+                }
+            });
+        }
+
+        function showReminder(t) {
+            document.getElementById('reminder-task-name').textContent = t.title;
+            document.getElementById('reminder-alert').classList.remove('hidden');
+            try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch(e) {}
+        }
+
+        function dismissAlert() { document.getElementById('reminder-alert').classList.add('hidden'); }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            document.body.className = state.theme + '-theme';
+            save();
+        }
+
+        // --- Token Carousel Functions ---
+        function scrollCarousel(direction) {
+            const carousel = document.getElementById('token-carousel');
+            const scrollAmount = 200;
+            if (direction === 'left') {
+                carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+            updateCarouselButtons();
+        }
+
+        function updateCarouselButtons() {
+            const carousel = document.getElementById('token-carousel');
+            const prevBtn = document.getElementById('carousel-prev');
+            const nextBtn = document.getElementById('carousel-next');
+            
+            prevBtn.disabled = carousel.scrollLeft === 0;
+            nextBtn.disabled = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 10;
+        }
+
+        function insertTokenAtCursor(token) {
+            const input = document.getElementById('modal-task-title');
+            if (!input) return;
+            
+            // Get current cursor position
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const text = input.value;
+            
+            // Insert token WITHOUT space (compact format: @aditya #work !p1)
+            const newText = text.substring(0, start) + token + text.substring(end);
+            input.value = newText;
+            
+            // Move cursor after token
+            const newPosition = start + token.length;
+            input.setSelectionRange(newPosition, newPosition);
+            input.focus();
+        }
+
+        // Direct menu trigger functions for carousel buttons
+        function triggerAssigneeMenu() {
+            if (state.currentUser.role !== 'admin') {
+                alert('Only admins can assign tasks');
+                return;
+            }
+            insertTokenAtCursor('@');
+            showMenu(state.users.map(u => ({ label: u.name, val: u.id, icon: 'user' })), 'assignee');
+        }
+
+        function triggerTagMenu() {
+            insertTokenAtCursor('#');
+            showMenu(state.tags.map(t => ({ label: t, val: t, icon: 'hashtag' })), 'tag');
+        }
+
+        function triggerPriorityMenu() {
+            insertTokenAtCursor('!');
+            showMenu([
+                { label: 'Priority 1', val: 'p1', icon: 'flag', color: 'text-red-500' },
+                { label: 'Priority 2', val: 'p2', icon: 'flag', color: 'text-orange-500' },
+                { label: 'Priority 3', val: 'p3', icon: 'flag', color: 'text-blue-500' },
+                { label: 'Priority 4', val: 'p4', icon: 'flag', color: 'text-gray-400' }
+            ], 'priority');
+        }
+
+        function triggerDatePicker() {
+            insertTokenAtCursor('?');
+            // Remove the token since date picker handles this differently
+            const input = document.getElementById('modal-task-title');
+            input.value = input.value.slice(0, -1); // Remove "?"
+            
+            document.getElementById('hidden-date-picker').showPicker();
+            document.getElementById('hidden-date-picker').onchange = (e) => {
+                stagedTask.dueDate = e.target.value;
+                syncMetaPills();
+            };
+        }
+
+        function triggerReminderMenu() {
+            insertTokenAtCursor('+');
+            showMenu([
+                { label: 'At time of due', val: '0', icon: 'bell' },
+                { label: '10m before', val: '10', icon: 'bell' },
+                { label: '30m before', val: '30', icon: 'bell' },
+                { label: '1h before', val: '60', icon: 'bell' }
+            ], 'reminder');
+        }
+
+        function triggerRecurrenceMenu() {
+            insertTokenAtCursor('*');
+            showMenu([
+                { label: 'Daily', val: 'daily', icon: 'redo' },
+                { label: 'Weekly', val: 'weekly', icon: 'redo' },
+                { label: 'Monthly', val: 'monthly', icon: 'redo' }
+            ], 'recurrence');
+        }
+
+        // Initialize carousel buttons on modal open
+        const origOpenModal = openModal;
+        openModal = function() {
+            origOpenModal();
+            setTimeout(() => updateCarouselButtons(), 50);
+        };
+
+        // Update buttons on scroll
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousel = document.getElementById('token-carousel');
+            if (carousel) {
+                carousel.addEventListener('scroll', updateCarouselButtons);
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seva App - Admin Command Center</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #fafafa;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #5a5a5a;
+      --text-muted: #8a8a8a;
+      --accent-teal: #2a7a7a;
+      --accent-teal-light: #e8f4f4;
+      --accent-orange: #d97706;
+      --accent-orange-light: #fef3e2;
+      --border-light: #e5e5e5;
+      --tag-red: #dc2626;
+      --tag-red-bg: #fef2f2;
+      --tag-blue: #2563eb;
+      --tag-blue-bg: #eff6ff;
+      --tag-green: #16a34a;
+      --tag-green-bg: #f0fdf4;
+      --tag-yellow: #ca8a04;
+      --tag-yellow-bg: #fefce8;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--accent-teal) 0%, #1a5a5a 100%);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+
+    .view-toggle button {
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .view-toggle button.active {
+      background: white;
+      color: var(--accent-teal);
+    }
+
+    .view-toggle button:hover:not(.active) {
+      color: white;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Section Labels */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* User Carousel - Top Section */
+    .carousel-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .user-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-light) transparent;
+    }
+
+    .user-carousel::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .user-carousel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .user-carousel::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 2px;
+    }
+
+    .user-card {
+      flex-shrink: 0;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+
+    .user-card:hover {
+      background: var(--bg-primary);
+    }
+
+    .user-card.selected {
+      background: var(--accent-teal-light);
+      border-color: var(--accent-teal);
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .user-card.selected .user-avatar {
+      background: linear-gradient(135deg, var(--accent-teal) 0%, #1a5a5a 100%);
+      color: white;
+    }
+
+    .pending-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
+      background: var(--tag-red);
+      color: white;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+    }
+
+    .user-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .user-card.selected .user-name {
+      color: var(--accent-teal);
+      font-weight: 600;
+    }
+
+    /* Review Queue - Middle Section */
+    .review-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .selected-user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .selected-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-teal) 0%, #1a5a5a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .selected-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .pending-count {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .no-selection {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .no-selection-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    /* Pending Task Card */
+    .pending-task {
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-light);
+    }
+
+    .pending-task:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .task-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .task-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tag-web { background: var(--tag-red-bg); color: var(--tag-red); }
+    .tag-app { background: var(--tag-blue-bg); color: var(--tag-blue); }
+    .tag-cleaning { background: var(--tag-green-bg); color: var(--tag-green); }
+    .tag-rest { background: var(--tag-yellow-bg); color: var(--tag-yellow); }
+
+    .task-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .reflection-block {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-top: 12px;
+      border-left: 3px solid var(--accent-orange);
+    }
+
+    .reflection-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .reflection-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-approve {
+      background: var(--accent-teal);
+      color: white;
+    }
+
+    .btn-approve:hover {
+      background: #1f6b6b;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-revert {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+    }
+
+    .btn-revert:hover {
+      background: var(--tag-red-bg);
+      color: var(--tag-red);
+      border-color: var(--tag-red);
+    }
+
+    /* Feedback Area */
+    .feedback-area {
+      margin-top: 12px;
+      display: none;
+    }
+
+    .feedback-area.visible {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent-teal);
+      box-shadow: 0 0 0 3px var(--accent-teal-light);
+    }
+
+    .btn-send-feedback {
+      background: var(--tag-red);
+      color: white;
+      padding: 10px 20px;
+    }
+
+    .btn-send-feedback:hover {
+      background: #b91c1c;
+    }
+
+    /* Activity Feed - Bottom Section */
+    .feed-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+    }
+
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .feed-filter {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      padding: 5px 10px;
+      border: 1px solid var(--border-light);
+      background: white;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: var(--accent-teal);
+      color: white;
+      border-color: var(--accent-teal);
+    }
+
+    .filter-btn:hover:not(.active) {
+      background: var(--bg-primary);
+    }
+
+    .activity-list {
+      max-height: 350px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-light) transparent;
+    }
+
+    .activity-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .activity-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .activity-list::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 2px;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s ease;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-item:hover {
+      background: var(--bg-primary);
+    }
+
+    .activity-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .activity-name {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .activity-task {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-tag {
+      flex-shrink: 0;
+    }
+
+    .activity-status {
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: var(--accent-orange-light);
+      color: var(--accent-orange);
+    }
+
+    .status-approved {
+      background: var(--tag-green-bg);
+      color: var(--tag-green);
+    }
+
+    .status-active {
+      background: var(--tag-blue-bg);
+      color: var(--tag-blue);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text-primary);
+      color: white;
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    /* Link to User Dashboard */
+    .nav-link {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      color: var(--accent-teal);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <div class="header-title">Seva App</div>
+        <div class="header-subtitle">Admin Command Center</div>
+      </div>
+      <div class="view-toggle">
+        <button onclick="window.location.href='seva-dashboard.html'">User</button>
+        <button class="active">Admin</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top Section: User Carousel -->
+    <section class="carousel-section">
+      <div class="section-label">Organization Members</div>
+      <div class="user-carousel" id="userCarousel">
+        <!-- Users populated by JS -->
+      </div>
+    </section>
+
+    <!-- Middle Section: Actionable Review Queue -->
+    <section class="review-section">
+      <div class="section-label">Pending Submissions</div>
+      <div id="reviewQueue">
+        <div class="no-selection">
+          <div class="no-selection-icon">&#128100;</div>
+          <p>Select a member from the carousel above to review their pending submissions</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Section: Master Activity Feed -->
+    <section class="feed-section">
+      <div class="feed-header">
+        <div class="section-label" style="margin-bottom: 0;">Master Activity Feed</div>
+        <div class="feed-filter">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="approved">Approved</button>
+        </div>
+      </div>
+      <div class="activity-list" id="activityFeed">
+        <!-- Activities populated by JS -->
+      </div>
+    </section>
+
+    <a href="seva-dashboard.html" class="nav-link">Switch to User Dashboard View</a>
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Mock Data
+    const members = [
+      { id: 1, name: 'Arjuna Das', initials: 'AD', pending: 2 },
+      { id: 2, name: 'Bhakti Devi', initials: 'BD', pending: 1 },
+      { id: 3, name: 'Chaitanya P.', initials: 'CP', pending: 0 },
+      { id: 4, name: 'Damodar S.', initials: 'DS', pending: 3 },
+      { id: 5, name: 'Ekadashi M.', initials: 'EM', pending: 1 },
+      { id: 6, name: 'Gopi Priya', initials: 'GP', pending: 0 },
+      { id: 7, name: 'Hari Krishna', initials: 'HK', pending: 2 }
+    ];
+
+    const pendingTasks = {
+      1: [
+        {
+          id: 101,
+          title: 'Update Temple Website Banner',
+          tag: 'web',
+          tagLabel: 'Web Dev',
+          date: 'Submitted May 28, 2025',
+          reflection: 'This seva allowed me to meditate on the beauty of the Lord while designing. I felt a deep connection to the mission of spreading Krishna consciousness through digital means. The process taught me patience and attention to detail.'
+        },
+        {
+          id: 102,
+          title: 'Fix Mobile Navigation Menu',
+          tag: 'web',
+          tagLabel: 'Web Dev',
+          date: 'Submitted May 29, 2025',
+          reflection: 'Working on the navigation reminded me that just as we guide devotees through the website, Krishna guides us on our spiritual path. I am grateful for this opportunity to serve.'
+        }
+      ],
+      2: [
+        {
+          id: 201,
+          title: 'Prepare Prasadam for Sunday Feast',
+          tag: 'cleaning',
+          tagLabel: 'Kitchen Services',
+          date: 'Submitted May 29, 2025',
+          reflection: 'Cooking for the Lord and His devotees fills my heart with joy. Every vegetable cut, every spice added was an offering of love. I prayed that all who partake would feel spiritual nourishment.'
+        }
+      ],
+      4: [
+        {
+          id: 401,
+          title: 'iOS App Push Notifications',
+          tag: 'app',
+          tagLabel: 'App Dev',
+          date: 'Submitted May 27, 2025',
+          reflection: 'Implementing notifications to remind devotees of their practices felt like participating in their spiritual journey. Technology becomes meaningful when used in service of the divine.'
+        },
+        {
+          id: 402,
+          title: 'Temple Hall Deep Cleaning',
+          tag: 'cleaning',
+          tagLabel: 'Cleaning',
+          date: 'Submitted May 28, 2025',
+          reflection: 'Cleaning the temple hall was purifying for both the space and my consciousness. With each sweep, I tried to sweep away material attachments from my heart as well.'
+        },
+        {
+          id: 403,
+          title: 'Rest Day Reflection',
+          tag: 'rest',
+          tagLabel: 'Daily Rest',
+          date: 'Submitted May 29, 2025',
+          reflection: 'Taking rest as prescribed helped me recover and prepare for more enthusiastic service. I used the quiet time to chant extra rounds and read Bhagavad-gita.'
+        }
+      ],
+      5: [
+        {
+          id: 501,
+          title: 'Android App Bug Fixes',
+          tag: 'app',
+          tagLabel: 'App Dev',
+          date: 'Submitted May 29, 2025',
+          reflection: 'Debugging requires patience and persistence - qualities that also help in spiritual life. I offered each fixed bug as a small victory for the mission.'
+        }
+      ],
+      7: [
+        {
+          id: 701,
+          title: 'Database Migration Script',
+          tag: 'web',
+          tagLabel: 'Web Dev',
+          date: 'Submitted May 28, 2025',
+          reflection: 'Working with data migration reminded me of how we must carefully transfer spiritual knowledge from guru to disciple. Precision and care are essential in both domains.'
+        },
+        {
+          id: 702,
+          title: 'Kitchen Morning Cleanup',
+          tag: 'cleaning',
+          tagLabel: 'Kitchen Services',
+          date: 'Submitted May 29, 2025',
+          reflection: 'Early morning cleaning before mangal arati was a privilege. The stillness of the temple at dawn, combined with service, created a deeply meditative experience.'
+        }
+      ]
+    };
+
+    const allActivities = [
+      { member: 'Arjuna Das', initials: 'AD', task: 'Update Temple Website Banner', tag: 'web', tagLabel: 'Web Dev', status: 'pending' },
+      { member: 'Arjuna Das', initials: 'AD', task: 'Fix Mobile Navigation Menu', tag: 'web', tagLabel: 'Web Dev', status: 'pending' },
+      { member: 'Bhakti Devi', initials: 'BD', task: 'Prepare Prasadam for Sunday Feast', tag: 'cleaning', tagLabel: 'Kitchen', status: 'pending' },
+      { member: 'Bhakti Devi', initials: 'BD', task: 'Altar Flower Arrangement', tag: 'cleaning', tagLabel: 'Cleaning', status: 'approved' },
+      { member: 'Chaitanya P.', initials: 'CP', task: 'Sadhana App Integration', tag: 'app', tagLabel: 'App Dev', status: 'approved' },
+      { member: 'Chaitanya P.', initials: 'CP', task: 'User Authentication Flow', tag: 'app', tagLabel: 'App Dev', status: 'active' },
+      { member: 'Damodar S.', initials: 'DS', task: 'iOS App Push Notifications', tag: 'app', tagLabel: 'App Dev', status: 'pending' },
+      { member: 'Damodar S.', initials: 'DS', task: 'Temple Hall Deep Cleaning', tag: 'cleaning', tagLabel: 'Cleaning', status: 'pending' },
+      { member: 'Damodar S.', initials: 'DS', task: 'Rest Day Reflection', tag: 'rest', tagLabel: 'Daily Rest', status: 'pending' },
+      { member: 'Ekadashi M.', initials: 'EM', task: 'Android App Bug Fixes', tag: 'app', tagLabel: 'App Dev', status: 'pending' },
+      { member: 'Gopi Priya', initials: 'GP', task: 'Website SEO Optimization', tag: 'web', tagLabel: 'Web Dev', status: 'active' },
+      { member: 'Gopi Priya', initials: 'GP', task: 'Evening Arati Cleanup', tag: 'cleaning', tagLabel: 'Cleaning', status: 'approved' },
+      { member: 'Hari Krishna', initials: 'HK', task: 'Database Migration Script', tag: 'web', tagLabel: 'Web Dev', status: 'pending' },
+      { member: 'Hari Krishna', initials: 'HK', task: 'Kitchen Morning Cleanup', tag: 'cleaning', tagLabel: 'Kitchen', status: 'pending' }
+    ].sort((a, b) => a.member.localeCompare(b.member));
+
+    let selectedMemberId = null;
+    let currentFilter = 'all';
+
+    // Render User Carousel
+    function renderCarousel() {
+      const carousel = document.getElementById('userCarousel');
+      carousel.innerHTML = members.map(member => `
+        <div class="user-card ${selectedMemberId === member.id ? 'selected' : ''}" 
+             onclick="selectMember(${member.id})">
+          <div class="user-avatar">
+            ${member.initials}
+            ${member.pending > 0 ? `<span class="pending-badge">${member.pending}</span>` : ''}
+          </div>
+          <div class="user-name">${member.name}</div>
+        </div>
+      `).join('');
+    }
+
+    // Select Member
+    function selectMember(memberId) {
+      selectedMemberId = memberId;
+      renderCarousel();
+      renderReviewQueue();
+    }
+
+    // Render Review Queue
+    function renderReviewQueue() {
+      const queue = document.getElementById('reviewQueue');
+      
+      if (!selectedMemberId) {
+        queue.innerHTML = `
+          <div class="no-selection">
+            <div class="no-selection-icon">&#128100;</div>
+            <p>Select a member from the carousel above to review their pending submissions</p>
+          </div>
+        `;
+        return;
+      }
+
+      const member = members.find(m => m.id === selectedMemberId);
+      const tasks = pendingTasks[selectedMemberId] || [];
+
+      if (tasks.length === 0) {
+        queue.innerHTML = `
+          <div class="review-header">
+            <div class="selected-user-info">
+              <div class="selected-avatar">${member.initials}</div>
+              <div>
+                <div class="selected-name">${member.name}</div>
+                <div class="pending-count">No pending submissions</div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state">
+            <div class="empty-icon">&#10003;</div>
+            <p>All submissions have been reviewed</p>
+          </div>
+        `;
+        return;
+      }
+
+      const tagClass = {
+        'web': 'tag-web',
+        'app': 'tag-app',
+        'cleaning': 'tag-cleaning',
+        'rest': 'tag-rest'
+      };
+
+      queue.innerHTML = `
+        <div class="review-header">
+          <div class="selected-user-info">
+            <div class="selected-avatar">${member.initials}</div>
+            <div>
+              <div class="selected-name">${member.name}</div>
+              <div class="pending-count">${tasks.length} pending submission${tasks.length > 1 ? 's' : ''}</div>
+            </div>
+          </div>
+        </div>
+        ${tasks.map(task => `
+          <div class="pending-task" id="task-${task.id}">
+            <div class="task-header">
+              <div>
+                <div class="task-title">${task.title}</div>
+                <div class="task-meta">
+                  <span class="task-tag ${tagClass[task.tag]}">${task.tagLabel}</span>
+                  <span class="task-date">${task.date}</span>
+                </div>
+              </div>
+            </div>
+            <div class="reflection-block">
+              <div class="reflection-label">Reflection Journal</div>
+              <div class="reflection-text">"${task.reflection}"</div>
+            </div>
+            <div class="action-buttons">
+              <button class="btn btn-approve" onclick="approveSeva(${task.id}, '${member.name}')">
+                <span>&#10003;</span> Approve Seva
+              </button>
+              <button class="btn btn-revert" onclick="toggleFeedback(${task.id})">
+                <span>&#8634;</span> Revert
+              </button>
+            </div>
+            <div class="feedback-area" id="feedback-${task.id}">
+              <textarea class="feedback-textarea" placeholder="Provide feedback or modification requests for this seva submission..."></textarea>
+              <button class="btn btn-send-feedback" onclick="sendFeedback(${task.id}, '${member.name}')">Send Feedback &amp; Revert</button>
+            </div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    // Toggle Feedback Area
+    function toggleFeedback(taskId) {
+      const feedbackArea = document.getElementById(`feedback-${taskId}`);
+      feedbackArea.classList.toggle('visible');
+    }
+
+    // Approve Seva
+    function approveSeva(taskId, memberName) {
+      const taskEl = document.getElementById(`task-${taskId}`);
+      taskEl.style.opacity = '0.5';
+      taskEl.style.pointerEvents = 'none';
+      
+      showToast(`Seva approved for ${memberName}. Syncing with Sadhana App...`);
+      
+      setTimeout(() => {
+        // Update mock data
+        if (pendingTasks[selectedMemberId]) {
+          pendingTasks[selectedMemberId] = pendingTasks[selectedMemberId].filter(t => t.id !== taskId);
+          const member = members.find(m => m.id === selectedMemberId);
+          if (member) member.pending = Math.max(0, member.pending - 1);
+        }
+        renderCarousel();
+        renderReviewQueue();
+        renderActivityFeed();
+      }, 1500);
+    }
+
+    // Send Feedback
+    function sendFeedback(taskId, memberName) {
+      const taskEl = document.getElementById(`task-${taskId}`);
+      taskEl.style.opacity = '0.5';
+      taskEl.style.pointerEvents = 'none';
+      
+      showToast(`Feedback sent to ${memberName}. Task reverted to active.`);
+      
+      setTimeout(() => {
+        if (pendingTasks[selectedMemberId]) {
+          pendingTasks[selectedMemberId] = pendingTasks[selectedMemberId].filter(t => t.id !== taskId);
+          const member = members.find(m => m.id === selectedMemberId);
+          if (member) member.pending = Math.max(0, member.pending - 1);
+        }
+        renderCarousel();
+        renderReviewQueue();
+      }, 1500);
+    }
+
+    // Render Activity Feed
+    function renderActivityFeed() {
+      const feed = document.getElementById('activityFeed');
+      
+      const filtered = currentFilter === 'all' 
+        ? allActivities 
+        : allActivities.filter(a => a.status === currentFilter);
+
+      const tagClass = {
+        'web': 'tag-web',
+        'app': 'tag-app',
+        'cleaning': 'tag-cleaning',
+        'rest': 'tag-rest'
+      };
+
+      const statusClass = {
+        'pending': 'status-pending',
+        'approved': 'status-approved',
+        'active': 'status-active'
+      };
+
+      feed.innerHTML = filtered.map(activity => `
+        <div class="activity-item">
+          <div class="activity-avatar">${activity.initials}</div>
+          <div class="activity-content">
+            <div class="activity-name">${activity.member}</div>
+            <div class="activity-task">${activity.task}</div>
+          </div>
+          <div class="activity-tag">
+            <span class="task-tag ${tagClass[activity.tag]}">${activity.tagLabel}</span>
+          </div>
+          <span class="activity-status ${statusClass[activity.status]}">${activity.status}</span>
+        </div>
+      `).join('');
+    }
+
+    // Filter Buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderActivityFeed();
+      });
+    });
+
+    // Toast
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Initialize
+    renderCarousel();
+    renderReviewQueue();
+    renderActivityFeed();
+  </script>
+</body>
+</html>

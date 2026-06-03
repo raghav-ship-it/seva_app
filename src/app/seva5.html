@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalmDo - Unified Command Deck & Token Extraction Board</title>
+    <style>
+        :root {
+            --bg-primary: #f6f8fa; --bg-surface: #ffffff; --text-main: #1e293b; --text-muted: #64748b;
+            --accent: #8b5cf6; --accent-hover: #7c3aed; --border-color: #e2e8f0;
+            --danger: #ef4444; --danger-bg: #fee2e2; --success: #10b981; --success-bg: #d1fae5;
+            --warning: #f59e0b; --warning-bg: #fef3c7; --radius-md: 16px; --radius-sm: 8px;
+            --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05); --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-main); min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; position: relative; overflow-x: hidden; }
+        
+        .app-container { width: 100%; max-width: 680px; transition: all 0.25s ease; position: relative; }
+        body.panel-open .app-container { margin-right: 420px; }
+        
+        header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+        h1 { font-size: 1.3rem; font-weight: 700; color: #0f172a; }
+
+        .control-strip { display: flex; align-items: center; gap: 10px; }
+        .select-identity { padding: 6px 12px; font-size: 0.85rem; border-radius: 20px; border: 1px solid var(--border-color); background: #fff; font-weight: 600; cursor: pointer; outline: none; }
+
+        /* Real-Time Live Activity Ticker Feed */
+        .admin-ticker { background: #0f172a; color: #38bdf8; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.8rem; margin-bottom: 1.5rem; display: block; line-height: 1.4; border: 1px solid #1e293b; }
+        body.alex-view .admin-ticker { display: none !important; }
+
+        /* Extracted Overdue Sandbox Architecture Overlay Area */
+        .critical-overdue-zone { background: linear-gradient(135deg, #fff5f5, #ffebe8); border: 2px dashed var(--danger); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: none; }
+        .critical-overdue-zone.active { display: block; }
+        .critical-title { font-size: 0.8rem; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+
+        /* Floating Action Trigger Button (FAB) */
+        .fab-trigger { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; background: var(--accent); color: white; border-radius: 50%; border: none; font-size: 1.75rem; font-weight: bold; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.4); display: flex; align-items: center; justify-content: center; z-index: 100; transition: transform 0.2s, background-color 0.2s; }
+        .fab-trigger:hover { background: var(--accent-hover); transform: scale(1.05); }
+        body.alex-view #admin-fab { display: none !important; }
+
+        /* Workspace Modal Blueprint Design Layout Grid */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        .modal-window { background: var(--bg-surface); border-radius: var(--radius-md); max-width: 960px; width: 100%; max-height: 85vh; display: grid; grid-template-columns: 1.2fr 1fr; box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid var(--border-color); }
+        .modal-left-inputs { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; border-right: 1px solid var(--border-color); position: relative; }
+        .modal-right-preview { padding: 1.5rem; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; justify-content: center; }
+        .modal-section-title { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-bottom: 0.5rem; }
+
+        .inline-autocomplete-menu { position: absolute; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); z-index: 2100; display: none; width: 220px; max-height: 180px; overflow-y: auto; }
+        .menu-opt { padding: 0.6rem 0.8rem; font-size: 0.85rem; cursor: pointer; font-weight: 600; color: var(--text-main); border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; }
+        .menu-opt:hover { background: #f5f3ff; color: var(--accent); }
+        .hidden-cal-trigger { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+
+        /* Alex Concurrent Multi-Focus Zone Grid Area */
+        .focus-zone { background: linear-gradient(135deg, #f5f3ff, #edd9ff); border: 2px solid #c084fc; padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 2rem; display: none; }
+        .focus-zone.active { display: block; }
+        .focus-title { font-size: 0.8rem; font-weight: 800; color: #9333ea; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+        .focus-grid { display: flex; flex-direction: column; gap: 1rem; }
+
+        /* Horizon Filters */
+        .horizon-filters { display: flex; gap: 8px; margin-bottom: 1.5rem; list-style: none; }
+        .horizon-btn { border: 1px solid var(--border-color); background: white; padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .horizon-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+        .badge-count { font-size: 0.7rem; background: #e2e8f0; color: var(--text-main); padding: 2px 6px; border-radius: 10px; }
+        .horizon-btn.active .badge-count { background: rgba(255,255,255,0.2); color: white; }
+
+        /* Core Matrix Render Systems */
+        .task-list { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+        .task-card { background: var(--bg-surface); border-radius: var(--radius-md); padding: 1.25rem; border: 1px solid var(--border-color); position: relative; transition: all 0.2s; border-left: 5px solid var(--border-color); }
+        .task-card.is-prioritized { border-color: #c084fc; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1); background: linear-gradient(to bottom right, #ffffff, #faf5ff); }
+        body.raghav-view .task-card { cursor: pointer; }
+        body.raghav-view .task-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: #cbd5e1; }
+        .task-card.selected-active { border-color: var(--accent) !important; background-color: #faf5ff; }
+
+        .priority-high { border-left-color: var(--danger) !important; }
+        .priority-mid { border-left-color: var(--warning) !important; }
+        .priority-low { border-left-color: var(--success) !important; }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .tag-pill { font-size: 0.7rem; font-weight: 700; background: #e0e7ff; color: var(--accent); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+        .priority-pill { font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .p-high { background: var(--danger-bg); color: var(--danger); }
+        .p-mid { background: var(--warning-bg); color: #b45309; }
+        .p-low { background: var(--success-bg); color: var(--success); }
+
+        .horizon-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+        .tag-overdue { background: var(--danger-bg); color: var(--danger); }
+        .tag-today { background: #fef3c7; color: #b45309; }
+        .tag-upcoming { background: #e2e8f0; color: var(--text-muted); }
+
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b; }
+
+        /* Subtasks Layout and Badging */
+        .subtasks-timeline { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-sm); }
+        .subtask-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 6px 8px; border-radius: 6px; }
+        .subtask-left { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .subtask-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; position: relative; z-index: 10; }
+        
+        .subtask-date-badge { font-size: 0.75rem; font-weight: 700; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .subtask-date-badge.is-today { background: #fef3c7; color: #b45309; }
+        .subtask-date-badge.is-overdue { background: var(--danger-bg); color: var(--danger); }
+
+        .progress-bar-container { height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 1rem; }
+        .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s ease; }
+
+        /* Action Docks */
+        .card-actions { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 0.75rem; position: relative; z-index: 10; }
+        .btn { padding: 6px 12px; font-size: 0.8rem; font-weight: 700; border-radius: var(--radius-sm); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-nudge { background: var(--warning-bg); color: #b45309; border: 1px solid #fde68a; }
+        .btn-active-toggle { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+        .btn-active-toggle.is-focused { background: #9333ea; color: white; border-color: #9333ea; }
+        
+        /* Management Drawer Blueprint Configuration */
+        .management-drawer { position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: var(--bg-surface); border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.05); transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); z-index: 600; display: flex; flex-direction: column; }
+        .management-drawer.active { transform: translateX(0); }
+        .drawer-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .drawer-content { padding: 1.5rem; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
+        
+        .field-group { display: flex; flex-direction: column; gap: 0.4rem; position: relative; }
+        .field-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .form-control-input { padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.9rem; font-weight: 500; outline: none; }
+
+        .subtasks-edit-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .subtask-builder-row { display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 6px; align-items: center; background: #f8fafc; padding: 6px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+        .subtask-builder-row input { border: none; background: transparent; font-size: 0.85rem; outline: none; font-weight: 500; padding: 4px; }
+
+        /* Dynamic Visibility Scopes Layout */
+        body.alex-view .raghav-ctrl { display: none !important; }
+        body.raghav-view .alex-ctrl { display: none !important; }
+    </style>
+</head>
+<body class="raghav-view">
+
+    <button class="fab-trigger" id="admin-fab" onclick="launchCreationModal()">+</button>
+
+    <div class="app-container" id="app-shell">
+        <header>
+            <div>
+                <h1 id="user-display-title">Raghav's Command Deck</h1>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Integrated Token-Parser & Horizon Board</p>
+            </div>
+            <div class="control-strip">
+                <select class="select-identity" onchange="swapSessionEnvironment(this.value)">
+                    <option value="Raghav">Identity: Raghav (Assigner)</option>
+                    <option value="Alex">Identity: Alex (Assignee)</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="admin-ticker" id="live-activity-ticker">
+            ⚡ [Platform Stream Operational] Awaiting downstream metrics completion tracking from Alex's UI...
+        </div>
+
+        <div class="critical-overdue-zone" id="global-overdue-dock">
+            <div class="critical-title">🚨 CRITICAL LOCKOUT TIMELINES (EXTRACTED OVERDUE SUBTASKS)</div>
+            <div class="task-list" id="overdue-extracted-injection-stack"></div>
+        </div>
+
+        <div class="focus-zone" id="alex-focus-slot">
+            <div class="focus-title">🎯 CURRENT ACTIVE FOCUS TRACKS <span class="badge-count" id="focus-count" style="background:#9333ea; color:white;">0</span></div>
+            <div class="focus-grid" id="focus-grid-injection-point"></div>
+        </div>
+
+        <ul class="horizon-filters">
+            <button class="horizon-btn active" onclick="filterHorizon('all', this)">All Horizons</button>
+            <button class="horizon-btn" onclick="filterHorizon('overdue', this)">Overdue <span class="badge-count" id="count-overdue">0</span></button>
+            <button class="horizon-btn" onclick="filterHorizon('today', this)">Today <span class="badge-count" id="count-today">0</span></button>
+            <button class="horizon-btn" onclick="filterHorizon('upcoming', this)">Upcoming <span class="badge-count" id="count-upcoming">0</span></button>
+        </ul>
+
+        <main>
+            <ul class="task-list" id="master-render-list"></ul>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="creation-modal">
+        <div class="modal-window">
+            <div class="modal-left-inputs">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <h3 style="font-weight:700;">Rapid Entry Blueprint Designer</h3>
+                    <button class="btn" style="background:transparent; font-size:1.2rem; border:none; cursor:pointer;" onclick="dismissCreationModal()">✕</button>
+                </div>
+                
+                <div class="field-group">
+                    <label>Main Blueprint Line Header</label>
+                    <input type="text" id="modal-input-title" class="form-control-input" placeholder="e.g. Workshop Launch @Alex #MOL !high" oninput="executeModalTokenParser(this, 'main', null)">
+                    <div class="inline-autocomplete-menu" id="modal-suggest-box"></div>
+                </div>
+
+                <input type="date" id="hidden-cal-sub" class="hidden-cal-trigger">
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <div class="field-group"><label>Assignee</label><input type="text" id="modal-meta-assignee" class="form-control-input" value="Alex" readonly style="background:#f1f5f9;"></div>
+                    <div class="field-group"><label>Context Tag</label><input type="text" id="modal-meta-tag" class="form-control-input" value="MOL" readonly style="background:#f1f5f9;"></div>
+                    <div class="field-group"><label>Priority</label><input type="text" id="modal-meta-priority" class="form-control-input" value="mid" readonly style="background:#f1f5f9;"></div>
+                </div>
+
+                <div class="field-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label>Subtask Checklist Items (? triggers date inside row)</label>
+                        <button class="btn" style="padding:4px 8px; font-size:0.75rem; background:#f3e8ff; color:#9333ea;" onclick="appendSubtaskFormRow()">+ Add Subtask</button>
+                    </div>
+                    <div id="modal-subtask-stack" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <button class="form-control-input" style="background:var(--accent); color:white; font-weight:700; cursor:pointer; margin-top:0.5rem; border:none;" onclick="commitStagedModalCard()">Deploy Architecture Board</button>
+            </div>
+            
+            <div class="modal-right-preview">
+                <div class="modal-section-title">🔴 Live Real-Time Card Layout Preview</div>
+                <div id="modal-live-preview-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="management-drawer" id="config-drawer-panel">
+        <div class="drawer-header">
+            <h3 style="font-weight:700; font-size:1.1rem;">Task Parameter Management</h3>
+            <button onclick="dismissConfigPanel()" style="background:transparent; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-muted);">✕</button>
+        </div>
+        <div class="drawer-content">
+            <div class="field-group">
+                <label>Task Descriptive Header Title</label>
+                <input type="text" id="field-edit-title" class="form-control-input" oninput="updateActiveCardMemory('title', this.value)">
+            </div>
+            <div class="field-group">
+                <label>Context Blueprint Tag</label>
+                <input type="text" id="field-edit-tag" class="form-control-input" oninput="updateActiveCardMemory('tag', this.value)">
+            </div>
+            <div class="field-group">
+                <label>Priority State Assignment</label>
+                <select id="field-edit-priority" class="form-control-input" onchange="updateActiveCardMemory('priority', this.value)">
+                    <option value="high">High Allocation Line</option>
+                    <option value="mid">Mid Allocation Frame</option>
+                    <option value="low">Low Allocation Frame</option>
+                </select>
+            </div>
+            <div class="field-group" style="margin-top:0.5rem;">
+                <label style="color:var(--accent);">Subtask Timeline Milestones</label>
+                <div class="subtasks-edit-list" id="drawer-subtasks-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRoleContext = "Raghav";
+        let activeHorizonFilter = "all";
+        let targetedFocusTaskIds = [];
+        let selectedTaskObjectRef = null;
+        let activeTargetedSubIndex = null;
+        
+        const systemTodayStr = "2026-06-01"; 
+
+        // Fully Integrated Database Unified Model Frame
+        const taskDatabase = [
+            {
+                id: 101, title: "Manual of Life: Workshop Launch Day 0", tag: "MOL", assignee: "Alex", priority: "high", horizon: "today",
+                subtasks: [
+                    { id: 1, text: "Morning Intentions Alignment Mapping", date: "2026-06-01", done: true },
+                    { id: 2, text: "Midday Core Metric Audit Analysis", date: "2026-05-30", done: false }, // Overdue
+                    { id: 3, text: "Evening Journal Refraction Capture", date: "2026-06-01", done: false }
+                ]
+            },
+            {
+                id: 102, title: "Manual of Life Verification Launch", tag: "MOL", assignee: "Alex", priority: "mid", horizon: "today",
+                subtasks: [
+                    { id: 1, text: "Somatic Habit Loop Configuration Check", date: "2026-05-28", done: false }, // Overdue
+                    { id: 2, text: "Core Metrics Validation Track", date: "2026-06-01", done: false },
+                    { id: 3, text: "Future Roadmap Refraction Window", date: "2026-06-05", done: false }
+                ]
+            }
+        ];
+
+        function swapSessionEnvironment(targetRole) {
+            currentRoleContext = targetRole;
+            const title = document.getElementById('user-display-title');
+            dismissConfigPanel();
+            dismissCreationModal();
+            
+            if (targetRole === "Raghav") {
+                document.body.className = "raghav-view";
+                title.textContent = "Raghav's Command Deck";
+            } else {
+                document.body.className = "alex-view";
+                title.textContent = "Alex's Assignment Queue";
+            }
+            renderWorkshopFeed();
+            evaluateFocusZoneRendering();
+        }
+
+        function executeModalTokenParser(inputElement, type, trackingIndex) {
+            const rawString = inputElement.value;
+            const pieces = rawString.split(" ");
+            const lastWord = pieces[pieces.length - 1];
+            const menu = document.getElementById('modal-suggest-box');
+            menu.style.display = "none";
+
+            if (lastWord.startsWith("@")) {
+                const members = ["Alex", "Raghav"];
+                menu.innerHTML = members.map(m => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'assignee', '${m}', ${trackingIndex})">👤 ${m}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("#")) {
+                const tags = ["MOL", "Habits", "Metrics"];
+                menu.innerHTML = tags.map(t => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'tag', '${t}', ${trackingIndex})">🏷️ #${t}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("!")) {
+                const priorities = ["high", "mid", "low"];
+                menu.innerHTML = priorities.map(p => `<div class="menu-opt" onclick="injectParsedTokenValue('${type}', 'priority', '${p}', ${trackingIndex})">⚡ !${p}</div>`).join('');
+                showFloatingMenu(inputElement, menu);
+            } else if (lastWord.startsWith("?")) {
+                inputElement.value = rawString.slice(0, -1);
+                if (type === 'sub') {
+                    activeTargetedSubIndex = trackingIndex;
+                    const calSub = document.getElementById('hidden-cal-sub');
+                    calSub.onchange = function() {
+                        injectParsedTokenValue('sub', 'date', this.value, activeTargetedSubIndex);
+                    };
+                    calSub.showPicker();
+                }
+            }
+            syncModalLivePreview();
+        }
+
+        function showFloatingMenu(input, menu) {
+            menu.style.display = "block";
+            menu.style.left = `${Math.min(input.offsetLeft + 10, input.parentElement.offsetWidth - 230)}px`;
+            menu.style.top = `${input.offsetTop + input.offsetHeight + 4}px`;
+        }
+
+        function injectParsedTokenValue(contextType, field, value, subIndex) {
+            document.getElementById('modal-suggest-box').style.display = "none";
+            
+            if (contextType === 'main') {
+                let input = document.getElementById('modal-input-title');
+                let words = input.value.split(" "); words.pop();
+                input.value = words.join(" ") + " ";
+                if (field === 'assignee') document.getElementById('modal-meta-assignee').value = value;
+                if (field === 'tag') document.getElementById('modal-meta-tag').value = value;
+                if (field === 'priority') document.getElementById('modal-meta-priority').value = value;
+                input.focus();
+            } else if (contextType === 'sub') {
+                let rowInput = document.querySelectorAll('.subtask-txt-input')[subIndex];
+                let words = rowInput.value.split(" "); words.pop();
+                rowInput.value = words.join(" ") + " ";
+                if (field === 'date') rowInput.parentElement.querySelector('.subtask-date-input').value = value;
+                rowInput.focus();
+            }
+            syncModalLivePreview();
+        }
+
+        function calculateCalculatedHorizon(subtaskList) {
+            const totalActive = subtaskList.filter(s => !s.done);
+            if (totalActive.length === 0) return "upcoming";
+
+            const overdueActive = totalActive.filter(s => s.date < systemTodayStr);
+            const standardActive = totalActive.filter(s => s.date >= systemTodayStr);
+
+            if (overdueActive.length > 0 && standardActive.length === 0) {
+                return "overdue";
+            }
+            let hasToday = standardActive.some(s => s.date === systemTodayStr);
+            return hasToday ? "today" : "upcoming";
+        }
+
+        function appendSubtaskFormRow(txt = "", dte = "2026-06-01") {
+            const container = document.getElementById('modal-subtask-stack');
+            const idx = container.children.length;
+            const row = document.createElement('div');
+            row.className = "subtask-builder-row";
+            row.innerHTML = `
+                <input type="text" class="subtask-txt-input" placeholder="Type text... (? for calendar)" value="${txt}" oninput="executeModalTokenParser(this, 'sub', ${idx})">
+                <input type="date" class="subtask-date-input" value="${dte}" onchange="syncModalLivePreview()">
+                <button onclick="this.parentElement.remove(); syncModalLivePreview();" style="border:none; background:transparent; color:var(--danger); cursor:pointer; font-weight:700;">✕</button>
+            `;
+            container.appendChild(row);
+            syncModalLivePreview();
+        }
+
+        function buildStagedTaskFromInputs() {
+            const subRows = document.querySelectorAll('#modal-subtask-stack .subtask-builder-row');
+            const parsedSubtasks = Array.from(subRows).map((row, i) => ({
+                id: i + 1,
+                text: row.querySelector('.subtask-txt-input').value || "Checklist Objective Milestone",
+                date: row.querySelector('.subtask-date-input').value || systemTodayStr,
+                done: false
+            }));
+
+            return {
+                id: Date.now(),
+                title: document.getElementById('modal-input-title').value || "Untitled Task Framework Base",
+                tag: document.getElementById('modal-meta-tag').value,
+                assignee: document.getElementById('modal-meta-assignee').value,
+                priority: document.getElementById('modal-meta-priority').value,
+                subtasks: parsedSubtasks,
+                horizon: calculateCalculatedHorizon(parsedSubtasks)
+            };
+        }
+
+        function syncModalLivePreview() {
+            const simulatedCard = buildStagedTaskFromInputs();
+            document.getElementById('modal-live-preview-box').innerHTML = compileCardMarkup(simulatedCard, false, true);
+        }
+
+        function launchCreationModal() {
+            document.getElementById('creation-modal').classList.add('active');
+            document.getElementById('modal-subtask-stack').innerHTML = "";
+            document.getElementById('modal-input-title').value = "";
+            appendSubtaskFormRow("Task Overdue Milestone", "2026-05-28");
+            appendSubtaskFormRow("Task Milestone Frame 2", "2026-06-01");
+            syncModalLivePreview();
+        }
+
+        function dismissCreationModal() {
+            document.getElementById('creation-modal').classList.remove('active');
+            document.getElementById('modal-suggest-box').style.display = "none";
+        }
+
+        function commitStagedModalCard() {
+            taskDatabase.push(buildStagedTaskFromInputs());
+            dismissCreationModal(); renderWorkshopFeed();
+        }
+
+        /* Interactive Click Architecture Engine Intersect Links */
+        function handleCardClickAction(taskId) {
+            if (currentRoleContext !== "Raghav") return;
+            
+            const matchedTask = taskDatabase.find(t => t.id === taskId);
+            if (!matchedTask) return;
+
+            selectedTaskObjectRef = matchedTask;
+            document.body.classList.add('panel-open');
+            document.getElementById('config-drawer-panel').classList.add('active');
+
+            document.getElementById('field-edit-title').value = matchedTask.title;
+            document.getElementById('field-edit-tag').value = matchedTask.tag;
+            document.getElementById('field-edit-priority').value = matchedTask.priority;
+
+            const container = document.getElementById('drawer-subtasks-container');
+            container.innerHTML = matchedTask.subtasks.map(sub => `
+                <div class="subtask-edit-item" style="display:flex; align-items:center; gap:8px; padding:4px;">
+                    <input type="checkbox" ${sub.done ? 'checked' : ''} onchange="toggleSubtaskState(${matchedTask.id}, ${sub.id}, this.checked)">
+                    <input type="text" class="form-control-input" style="flex:1;" value="${sub.text}" oninput="updateNestedSubtaskTextMemory(${matchedTask.id}, ${sub.id}, this.value)">
+                    <span class="subtask-date-badge">${sub.date}</span>
+                </div>
+            `).join('');
+            renderWorkshopFeed();
+        }
+
+        function updateNestedSubtaskTextMemory(taskId, subtaskId, newString) {
+            const targetTask = taskDatabase.find(t => t.id === taskId);
+            if (targetTask) {
+                const sub = targetTask.subtasks.find(s => s.id === subtaskId);
+                if (sub) sub.text = newString;
+            }
+            evaluateFocusZoneRendering();
+        }
+
+        function updateActiveCardMemory(fieldName, targetValue) {
+            if (!selectedTaskObjectRef || currentRoleContext !== "Raghav") return;
+            selectedTaskObjectRef[fieldName] = targetValue;
+            selectedTaskObjectRef.horizon = calculateCalculatedHorizon(selectedTaskObjectRef.subtasks);
+            renderWorkshopFeed();
+        }
+
+        function dismissConfigPanel() {
+            selectedTaskObjectRef = null;
+            document.body.classList.remove('panel-open');
+            document.getElementById('config-drawer-panel').classList.remove('active');
+            renderWorkshopFeed();
+        }
+
+        function toggleSubtaskState(taskId, subtaskId, isChecked) {
+            const parent = taskDatabase.find(t => t.id === taskId);
+            if (!parent) return;
+            const sub = parent.subtasks.find(s => s.id === subtaskId);
+            if (sub) sub.done = isChecked;
+
+            parent.horizon = calculateCalculatedHorizon(parent.subtasks);
+
+            const ticker = document.getElementById('live-activity-ticker');
+            ticker.innerHTML = `⚡ [METRIC SIGNAL STREAM] Action checkpoint "${sub.text}" (${taskDatabase.filter(s => s.done).length} updates logged across framework matrix state).`;
+            ticker.style.color = "#10b981";
+
+            renderWorkshopFeed();
+            evaluateFocusZoneRendering();
+            
+            // Sync live configuration display parameters if current panel is active
+            if (selectedTaskObjectRef && selectedTaskObjectRef.id === taskId) {
+                handleCardClickAction(taskId);
+            }
+        }
+
+        function triggerOsNudgeReminder(taskId, event) {
+            if (event) event.stopPropagation();
+            const parentTask = taskDatabase.find(t => t.id === taskId);
+            alert(`[OS Kernel System Notification Alert Outbound]\nRaghav forced a layout alert down to Alex for: "${parentTask.title}"`);
+        }
+
+        function toggleTaskFocusState(taskId, event) {
+            if (event) event.stopPropagation();
+            if (targetedFocusTaskIds.includes(taskId)) {
+                targetedFocusTaskIds = targetedFocusTaskIds.filter(id => id !== taskId);
+            } else {
+                targetedFocusTaskIds.push(taskId);
+            }
+            evaluateFocusZoneRendering(); renderWorkshopFeed();
+        }
+
+        function evaluateFocusZoneRendering() {
+            const focusSlot = document.getElementById('alex-focus-slot');
+            const gridContainer = document.getElementById('focus-grid-injection-point');
+            const countBadge = document.getElementById('focus-count');
+            
+            if (currentRoleContext !== "Alex" || targetedFocusTaskIds.length === 0) {
+                focusSlot.classList.remove('active'); return;
+            }
+            focusSlot.classList.add('active');
+            countBadge.textContent = targetedFocusTaskIds.length; gridContainer.innerHTML = "";
+
+            targetedFocusTaskIds.forEach(id => {
+                const matchedTask = taskDatabase.find(t => t.id === id);
+                if (matchedTask) gridContainer.innerHTML += compileCardMarkup(matchedTask, true);
+            });
+        }
+
+        function updateHorizonBadgeMetrics() {
+            document.getElementById('count-overdue').textContent = taskDatabase.filter(t => t.horizon === 'overdue').length;
+            document.getElementById('count-today').textContent = taskDatabase.filter(t => t.horizon === 'today').length;
+            document.getElementById('count-upcoming').textContent = taskDatabase.filter(t => t.horizon === 'upcoming').length;
+        }
+
+        function filterHorizon(horizonType, elementRef) {
+            document.querySelectorAll('.horizon-btn').forEach(b => b.classList.remove('active'));
+            elementRef.classList.add('active'); activeHorizonFilter = horizonType; renderWorkshopFeed();
+        }
+
+        function compileCardMarkup(task, isInsideFocusZone = false, isStaticPreview = false) {
+            const completedCount = task.subtasks.filter(s => s.done).length;
+            const progress = task.subtasks.length ? Math.round((completedCount / task.subtasks.length) * 100) : 0;
+            const isPrioritized = targetedFocusTaskIds.includes(task.id) && currentRoleContext === "Alex";
+            const isSelected = selectedTaskObjectRef && selectedTaskObjectRef.id === task.id;
+
+            // Retain execution paths for Standard Non-Overdue / Historic Metrics
+            const standardSubtasks = task.subtasks.filter(s => s.done || s.date >= systemTodayStr);
+
+            const subtasksHtml = standardSubtasks.map(sub => {
+                let modifier = sub.date === systemTodayStr ? "is-today" : "";
+                return `
+                    <div class="subtask-item">
+                        <div class="subtask-left">
+                            <input type="checkbox" ${sub.done ? 'checked' : ''} ${isStaticPreview ? 'disabled' : ''} onclick="event.stopPropagation();" onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)">
+                            <span style="${sub.done ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${sub.text}</span>
+                        </div>
+                        <span class="subtask-date-badge ${modifier}">📅 ${sub.date === systemTodayStr ? 'Today' : sub.date}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="task-card priority-${task.priority} ${isPrioritized ? 'is-prioritized' : ''} ${isSelected ? 'selected-active' : ''}" onclick="${isStaticPreview ? '' : `handleCardClickAction(${task.id})`}">
+                    <div class="card-header">
+                        <div>
+                            <span class="tag-pill">#${task.tag}</span>
+                            <span class="priority-pill p-${task.priority}">${task.priority}</span>
+                        </div>
+                        <span class="horizon-tag tag-${task.horizon}">${task.horizon}</span>
+                    </div>
+                    <div class="card-title">${task.title}</div>
+                    <div class="subtasks-timeline">${subtasksHtml || '<div style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:4px;">(Empty Shell - Active Items Extracted Overdue)</div>'}</div>
+                    <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${progress}%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:0.5rem;">
+                        <span>Progress Metric</span><span>${progress}%</span>
+                    </div>
+                    ${isStaticPreview ? '' : `
+                    <div class="card-actions">
+                        <button class="btn btn-nudge raghav-ctrl" onclick="triggerOsNudgeReminder(${task.id}, event)">🔔 Send System Nudge Alert</button>
+                        ${!isInsideFocusZone ? `
+                            <button class="btn btn-active-toggle alex-ctrl ${targetedFocusTaskIds.includes(task.id) ? 'is-focused' : ''}" onclick="toggleTaskFocusState(${task.id}, event)">
+                                ⚡ Track in Active Focus
+                            </button>
+                        ` : `
+                            <button class="btn btn-active-toggle alex-ctrl is-focused" onclick="toggleTaskFocusState(${task.id}, event)">✕ Dismiss Track</button>
+                        `}
+                    </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderWorkshopFeed() {
+            const listGrid = document.getElementById('master-render-list');
+            const overdueDock = document.getElementById('global-overdue-dock');
+            const overdueStack = document.getElementById('overdue-extracted-injection-stack');
+            
+            listGrid.innerHTML = "";
+            overdueStack.innerHTML = "";
+            updateHorizonBadgeMetrics();
+            
+            let totalOverdueExtractedCount = 0;
+
+            taskDatabase.forEach(task => {
+                // Extracted structural overdue layout sub-rendering loop engines
+                const overdueSubtasks = task.subtasks.filter(s => !s.done && s.date < systemTodayStr);
+                
+                overdueSubtasks.forEach(sub => {
+                    totalOverdueExtractedCount++;
+                    const ovCard = document.createElement('div');
+                    ovCard.className = `task-card priority-${task.priority} ${selectedTaskObjectRef && selectedTaskObjectRef.id === task.id ? 'selected-active' : ''}`;
+                    // Make the overdue card clickable to link directly to parameter panel
+                    ovCard.onclick = () => handleCardClickAction(task.id);
+                    ovCard.innerHTML = `
+                        <div class="card-header">
+                            <span class="tag-pill" style="background:var(--danger-bg); color:var(--danger);">OVERDUE: ${task.title}</span>
+                            <span class="priority-pill p-${task.priority}">${task.priority}</span>
+                        </div>
+                        <div class="card-title" style="font-size:0.95rem; margin-bottom:0.5rem;"><strong>${sub.text}</strong></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="subtask-date-badge is-overdue">📅 Missed: ${sub.date}</span>
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--success); cursor:pointer; display:flex; align-items:center; gap:4px;" onclick="event.stopPropagation();">
+                                <input type="checkbox" onchange="toggleSubtaskState(${task.id}, ${sub.id}, this.checked)"> Resolve Milestone
+                            </label>
+                        </div>
+                    `;
+                    overdueStack.appendChild(ovCard);
+                });
+
+                // Standard board feed filters allocation frame logic rules
+                if (currentRoleContext === "Alex" && targetedFocusTaskIds.includes(task.id)) return;
+                
+                if (activeHorizonFilter === "all" || task.horizon === activeHorizonFilter) {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = compileCardMarkup(task, false);
+                    listGrid.appendChild(listItem);
+                }
+            });
+
+            overdueDock.classList.toggle('active', totalOverdueExtractedCount > 0);
+        }
+
+        renderWorkshopFeed();
+    </script>
+</body>
+</html>
