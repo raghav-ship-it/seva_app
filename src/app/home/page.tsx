@@ -6,6 +6,7 @@ import TaskItem from '@/components/TaskItem';
 import FAB from '@/components/FAB';
 import ReminderAlert from '@/components/ReminderAlert';
 import { getLocalDateStr } from '@/lib/date';
+import { doesTaskOccurOnDate } from '@/lib/recurrence';
 
 // Integrated SunLottie Component with matching background capabilities
 function SunLottie({ className, size = 240 }: { className?: string; size?: number; }) {
@@ -56,7 +57,7 @@ export default function HomePage() {
 
   const suggestions = tasks.filter(t => 
     !t.myDay && 
-    t.dueDate?.startsWith(todayStr) && 
+    (t.dueDate?.startsWith(todayStr) || doesTaskOccurOnDate(t.dueDate, t.recurrence, todayStr)) &&
     t.assigneeId === currentUser?.id && 
     t.status !== 'completed'
   );

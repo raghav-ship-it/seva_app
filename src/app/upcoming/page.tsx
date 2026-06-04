@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore';
 import TaskItem from '@/components/TaskItem';
 import FAB from '@/components/FAB';
 import ReminderAlert from '@/components/ReminderAlert';
+import { doesTaskOccurOnDate } from '@/lib/recurrence';
 
 export default function UpcomingPage() {
   const { tasks, currentUser, openQuickEntry } = useStore();
@@ -60,6 +61,14 @@ export default function UpcomingPage() {
   const noDate: typeof tasks = [];
 
   myTasks.forEach(t => {
+    // Handle recurrence tasks (daily/weekly/monthly without specific due date)
+    if (!t.dueDate && t.recurrence) {
+      if (t.recurrence === 'daily' || doesTaskOccurOnDate(null, t.recurrence, todayStr)) {
+        today.push(t);
+      }
+      return;
+    }
+
     if (!t.dueDate) {
       noDate.push(t);
       return;
@@ -77,6 +86,14 @@ export default function UpcomingPage() {
       const nextIndex = nextDaysStr.indexOf(tDateStr);
       if (nextIndex !== -1) {
         next7Days[nextIndex].tasks.push(t);
+      } else if (t.recurrence && doesTaskOccurOnDate(t.dueDate, t.recurrence, tDateStr)) {
+        // Handle recurring tasks on their respective days
+        const nextIndex = nextDaysStr.indexOf(tDateStr);
+        if (nextIndex !== -1) {
+          next7Days[nextIndex].tasks.push(t);
+        } else {
+          later.push(t);
+        }
       } else {
         later.push(t);
       }
