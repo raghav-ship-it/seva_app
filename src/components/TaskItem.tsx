@@ -14,7 +14,7 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
   const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail } = useStore();
   
-  const dDate = task.dueDate ? new Date(task.dueDate) : null;
+  const dDate = task.dueDate ? new Date(task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T00:00`) : null;
 const now = new Date();
 const todayStr = getLocalDateStr();
 
@@ -95,8 +95,12 @@ const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed
   }`}>
     <i className="fas fa-clock text-[9px]"></i> 
     
-    {/* Case 1: Has both or just date */}
-    {task.dueDate && dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+    {/* Case 1: Has a due date with optional time */}
+    {task.dueDate && (
+      task.dueDate.includes('T')
+        ? dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : dDate?.toLocaleDateString()
+    )}
     
     {/* Case 2: Time-only (e.g., Recurring daily tasks) */}
     {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}

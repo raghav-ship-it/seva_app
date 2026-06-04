@@ -1,3 +1,5 @@
+import { Recurrence } from '@/lib/types';
+
 export function getLocalDateStr(offset = 0) {
   const date = new Date();
   date.setDate(date.getDate() + offset);
