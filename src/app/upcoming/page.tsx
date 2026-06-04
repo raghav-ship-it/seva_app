@@ -17,7 +17,10 @@ export default function UpcomingPage() {
   const getLocalDateStr = (offset = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offset);
-    return d.toISOString().split('T')[0];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const todayStr = getLocalDateStr(0);
@@ -31,7 +34,10 @@ export default function UpcomingPage() {
   for (let i = 2; i <= 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     nextDaysStr.push(dateStr);
     
     const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });

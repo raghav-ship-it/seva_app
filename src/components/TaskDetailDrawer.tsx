@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { getLocalIsoDateTime } from '@/lib/date';
 import { useStore } from '@/store/useStore';
 import { Priority, Recurrence, TaskAttachment } from '@/lib/types';
 
@@ -109,7 +110,7 @@ const TaskDetailDrawer = () => {
 
   const handleCarouselClick = (type: string) => {
     if (type === 'dueDate') {
-      const today = new Date().toISOString().split('T')[0] + 'T12:00';
+      const today = getLocalIsoDateTime(0, '12:00');
       handleFieldChange({ dueDate: today });
     } else if (type === 'assigneeId') {
       handleFieldChange({ assigneeId: currentUser.id });

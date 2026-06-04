@@ -36,6 +36,7 @@ export interface Task {
   title: string;
   desc: string;
   dueDate: string | null; // ISO string or simple date
+  dueTime: string | null; // HH:MM format
   priority: Priority;
   tags: string[];
   assigneeId: string;
@@ -80,6 +81,7 @@ export interface AppState {
       tags: string[];
       priority: Priority;
       dueDate: string | null;
+      dueTime: string | null;
       reminder: string | null;
       recurrence: Recurrence;
     };

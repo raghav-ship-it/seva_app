@@ -1,39 +1,34 @@
 'use client';
 
-import { useEffect } from 'react';
+export default function SunLottie({ className, size = 140 }: { className?: string; size?: number; }) {
+  const wrapperStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    overflow: 'hidden',
+    display: 'inline-block',
+    background: '#FFFBEB',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.08)'
+  };
 
-const SCRIPT_SRC = 'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js';
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'lottie-player': any;
-    }
-  }
-}
-
-export default function SunLottie({ className, width = 80, height = 80 }: { className?: string; width?: number; height?: number; }) {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if ((window as any).customElements?.get('lottie-player')) return;
-
-    if (!document.querySelector(`script[src="${SCRIPT_SRC}"]`)) {
-      const script = document.createElement('script');
-      script.src = SCRIPT_SRC;
-      script.async = true;
-      document.body.appendChild(script);
-    }
-  }, []);
+  const videoStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+    pointerEvents: 'none'
+  };
 
   return (
-    <div className={className}>
-      <lottie-player
-        src="/animations/sun.json"
-        background="transparent"
-        speed="1"
+    <div className={className} style={wrapperStyle} aria-hidden>
+      <video
+        src="/animations/sun.mp4"
+        autoPlay
         loop
-        autoplay
-        style={{ width, height, margin: '0 auto' }}
+        muted
+        playsInline
+        preload="auto"
+        style={videoStyle}
       />
     </div>
   );

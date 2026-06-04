@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Task } from '@/lib/types';
+import { getLocalDateStr,isTimeOverdueToday,formatTimeStr } from '@/lib/date';
 import { useStore } from '@/store/useStore';
 import confetti from 'canvas-confetti';
 
@@ -14,9 +15,13 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
   const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail } = useStore();
   
   const dDate = task.dueDate ? new Date(task.dueDate) : null;
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-  const isOverdue = dDate && dDate < now && !task.dueDate?.startsWith(todayStr);
+const now = new Date();
+const todayStr = getLocalDateStr();
+
+// Calculate overdue status dynamically
+const isDateOverdue = dDate && dDate < now && !task.dueDate?.startsWith(todayStr);
+const isTimeOverdue = !task.dueDate && task.dueTime && isTimeOverdueToday(task.dueTime);
+const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed';
   const assignee = users.find(u => u.id === task.assigneeId);
   const assigneeName = assignee?.name.split(' (')[0] || 'Unknown';
 
@@ -84,15 +89,21 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
           )}
 
           {/* Due Date */}
-          {task.dueDate && (
-            <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
-              isOverdue ? 'text-red-500 font-extrabold' : 'text-orange-600 font-medium'
-            }`}>
-              <i className="fas fa-calendar text-[9px]"></i> 
-              {dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              {isOverdue && ' (Overdue)'}
-            </span>
-          )}
+          {(task.dueDate || task.dueTime) && (
+  <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
+    isOverdue ? 'text-red-500 font-extrabold animate-pulse' : 'text-orange-600 font-medium'
+  }`}>
+    <i className="fas fa-clock text-[9px]"></i> 
+    
+    {/* Case 1: Has both or just date */}
+    {task.dueDate && dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+    
+    {/* Case 2: Time-only (e.g., Recurring daily tasks) */}
+    {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}
+    
+    {isOverdue && ' (Overdue)'}
+  </span>
+)}
           
           {/* Tags */}
           {task.tags.map(tag => (

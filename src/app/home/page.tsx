@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore';
 import TaskItem from '@/components/TaskItem';
 import FAB from '@/components/FAB';
 import ReminderAlert from '@/components/ReminderAlert';
+import { getLocalDateStr } from '@/lib/date';
 
 // Integrated SunLottie Component with matching background capabilities
 function SunLottie({ className, size = 240 }: { className?: string; size?: number; }) {
@@ -45,7 +46,7 @@ export default function HomePage() {
   const { tasks, currentUser, clearMyDay } = useStore();
   
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = getLocalDateStr();
 
   const myDayTasks = tasks.filter(t => 
     t.myDay && 

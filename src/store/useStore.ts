@@ -123,6 +123,16 @@ export const useStore = create<AppStore>()(
       toggleTaskCompletion: (id) => {
         const changer = get().currentUser?.name || 'Unknown';
         const oldTask = get().tasks.find(t => t.id === id);
+
+        // DAILY RECURRENCE CONSTRAINT: Cannot complete for future days
+        if (oldTask && oldTask.status !== 'completed' && oldTask.recurrence === 'daily' && oldTask.dueDate) {
+          const now = new Date();
+          const due = new Date(oldTask.dueDate);
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+          if (today < dueDay) return;
+        }
+
         const wasCompleted = oldTask?.status === 'completed';
 
         set((state) => {
