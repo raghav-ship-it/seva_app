@@ -10,13 +10,11 @@ export interface QuickEntryFooterProps {
     tags: string[];
     dueDate: string | null;
   };
-
+  setStagedMeta: (updater: any) => void;
   projects: string[];
   trackUsedToken: (type: 'assignees' | 'tags' | 'projects', value: string) => void;
-
   title: string;
   desc: string;
-
   onClear: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -26,6 +24,7 @@ export default function QuickEntryFooter({
   activePopover,
   setActivePopover,
   stagedMeta,
+  setStagedMeta,
   projects,
   trackUsedToken,
   title,
@@ -42,17 +41,27 @@ export default function QuickEntryFooter({
         <button
           type="button"
           onClick={() => setActivePopover(activePopover === 'project' ? null : 'project')}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 px-2.5 py-1.5 rounded-md transition-colors"
-          title="Project Context Mapping"
+          className={`h-7 px-2 text-xs font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1.5 transition-colors text-gray-600 ${
+            stagedMeta.projectId ? 'border-green-200 bg-green-50/50 text-green-700 hover:bg-green-50' : ''
+          }`}
         >
-          <i className="fas fa-inbox text-gray-400 text-sm"></i>
-          <span>{stagedMeta.projectId || 'Inbox'}</span>
-          <i className="fas fa-chevron-down text-[9px] text-gray-400 ml-0.5"></i>
+          <i className="fas fa-folder text-gray-400"></i>
+          <span>{stagedMeta.projectId || 'Project'}</span>
         </button>
 
         {activePopover === 'project' && (
-          <div className="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-xl p-1.5 z-50 min-w-[180px] flex flex-col gap-0.5 text-left">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 px-1.5">Projects</p>
+          <div className="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] p-1 flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
+            <button
+              onClick={() => {
+                setStagedMeta((s: any) => ({ ...s, projectId: null }));
+                setActivePopover(null);
+              }}
+              className={`text-left px-2.5 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded flex items-center justify-between text-gray-500 ${
+                stagedMeta.projectId === null ? 'bg-gray-50 font-bold' : ''
+              }`}
+            >
+              No Project
+            </button>
             {projects.map((p) => (
               <button
                 key={p}
@@ -95,12 +104,11 @@ export default function QuickEntryFooter({
         <button
           onClick={onSave}
           disabled={!title.trim()}
-          className="px-4 py-1.5 text-xs font-bold bg-red-400/90 hover:bg-red-400 text-white rounded-md disabled:opacity-40 disabled:pointer-events-none shadow-sm transition-all"
+          className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 rounded-md shadow-sm transition-colors"
         >
-          Add task
+          Save
         </button>
       </div>
     </div>
   );
 }
-

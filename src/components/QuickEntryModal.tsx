@@ -10,14 +10,14 @@ export interface QuickEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultDueDate?: string | null;
-  defaultProject?: string | null;
+  defaultProject?: string | null; // Added coordinate prop
 }
 
 export default function QuickEntryModal({
   isOpen,
   onClose,
   defaultDueDate = null,
-  defaultProject = null,
+  defaultProject = null, // Set default
 }: QuickEntryModalProps) {
   const controller = useQuickEntryController({
     isOpen,
@@ -31,7 +31,7 @@ export default function QuickEntryModal({
       isOpen={controller.isOpen}
       isClosing={controller.isClosing}
       modalRef={controller.modalRef}
-      onRequestClose={controller.handleClose}
+      onRequestClose={controller.handleClose} // Passed down to handle the expanding morph
     >
       <QuickEntryEditor
         editor={controller.editor}
@@ -70,6 +70,7 @@ export default function QuickEntryModal({
         activePopover={controller.activePopover}
         setActivePopover={controller.setActivePopover}
         stagedMeta={controller.stagedMeta}
+        setStagedMeta={controller.setStagedMeta}
         projects={controller.projects}
         trackUsedToken={controller.trackUsedToken}
         title={controller.title}
@@ -81,4 +82,3 @@ export default function QuickEntryModal({
     </QuickEntryShell>
   );
 }
-
