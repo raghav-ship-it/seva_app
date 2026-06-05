@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
+import styles from './FAB.module.css';
 
 const FAB = () => {
   const isQuickEntryOpen = useStore((state) => state.isQuickEntryOpen);
@@ -10,7 +11,7 @@ const FAB = () => {
 
   return (
     <button 
-      className="fab" 
+      className={styles.fab} 
       onClick={() => {
         if (isQuickEntryOpen) closeQuickEntry();
         else openQuickEntry();

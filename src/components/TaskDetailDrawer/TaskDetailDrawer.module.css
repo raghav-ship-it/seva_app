@@ -1,0 +1,51 @@
+/* Upsliding Drawer & Activity Timeline Styling */
+@keyframes slideDrawerUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.drawerSlideUp {
+  animation: slideDrawerUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.drawerOverlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
+}
+
+.timelineItemSystem {
+  border-left: 2px solid var(--border-color);
+  padding-left: 14px;
+  position: relative;
+}
+
+.timelineItemSystem::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
+.timelineItemComment {
+  border-left: 2px solid var(--border-color);
+  padding-left: 14px;
+  position: relative;
+}
+
+.timelineItemComment::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}

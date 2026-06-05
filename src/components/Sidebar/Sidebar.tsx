@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/store/useStore';
+import styles from './Sidebar.module.css';
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -56,7 +57,7 @@ const Sidebar = () => {
   const unreadNotifs = (adminNotifications || []).filter(n => !n.read);
 
   return (
-    <aside className="w-[280px] bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] p-5 flex flex-col gap-5 h-full relative">
+    <aside className={`${styles.sidebarContainer} bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] p-5 flex flex-col gap-5 h-full relative`}>
       {/* Header Logo & Buttons */}
       <div className="flex items-center justify-between px-3 mb-2 relative">
         <div className="flex items-center gap-2.5">

@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { Task } from '@/lib/types';
-import { getLocalDateStr,isTimeOverdueToday,formatTimeStr } from '@/lib/date';
+import { getLocalDateStr, isTimeOverdueToday, formatTimeStr } from '@/lib/date';
 import { useStore } from '@/store/useStore';
 import confetti from 'canvas-confetti';
+import styles from './TaskItem.module.css';
 
 interface TaskItemProps {
   task: Task;
@@ -15,21 +16,21 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
   const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail } = useStore();
   
   const dDate = task.dueDate ? new Date(task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T00:00`) : null;
-const now = new Date();
-const todayStr = getLocalDateStr();
+  const now = new Date();
+  const todayStr = getLocalDateStr();
 
-// Calculate overdue status dynamically
-const isDateOverdue = dDate && dDate < now && !task.dueDate?.startsWith(todayStr);
-const isTimeOverdue = !task.dueDate && task.dueTime && isTimeOverdueToday(task.dueTime);
-const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed';
+  // Calculate overdue status dynamically
+  const isDateOverdue = dDate && dDate < now && !task.dueDate?.startsWith(todayStr);
+  const isTimeOverdue = !task.dueDate && task.dueTime && isTimeOverdueToday(task.dueTime);
+  const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed';
   const assignee = users.find(u => u.id === task.assigneeId);
   const assigneeName = assignee?.name.split(' (')[0] || 'Unknown';
 
   const statusMap = {
-    'pending': { label: 'Pending', class: 'status-pending' },
-    'in_progress': { label: 'Doing', class: 'status-progress' },
-    'review': { label: 'In Review', class: 'status-review' },
-    'completed': { label: 'Completed', class: 'status-completed' }
+    'pending': { label: 'Pending', class: styles.statusPending },
+    'in_progress': { label: 'Doing', class: styles.statusProgress },
+    'review': { label: 'In Review', class: styles.statusReview },
+    'completed': { label: 'Completed', class: styles.statusCompleted }
   };
   
   const s = statusMap[task.status] || statusMap.pending;
@@ -47,11 +48,13 @@ const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed
     toggleTaskCompletion(task.id);
   };
 
+  const priorityClass = task.priority ? styles[`priority${task.priority.toUpperCase()}`] : '';
+
   return (
-    <div className={`task-item ${task.priority} ${task.status === 'completed' ? 'opacity-50' : ''} transition-all hover:bg-[var(--bg-secondary)] px-4 group`}>
+    <div className={`${styles.taskItem} ${priorityClass} ${task.status === 'completed' ? 'opacity-50' : ''} transition-all hover:bg-[var(--bg-secondary)] px-4 group`}>
       {/* Checkbox */}
       <div 
-        className={`checkbox ${task.status === 'completed' ? 'checked' : ''} mt-1`} 
+        className={`${styles.checkbox} ${task.status === 'completed' ? styles.checked : ''} mt-1`} 
         onClick={handleCompleteToggle}
         title={task.status === 'completed' ? "Mark as Incomplete" : "Mark as Completed"}
       />
@@ -62,7 +65,7 @@ const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed
         onClick={() => openTaskDetail(task.id)}
       >
         <div className="flex items-center gap-2">
-          <span className={`status-badge ${s.class}`}>{s.label}</span>
+          <span className={`${styles.statusBadge} ${s.class}`}>{s.label}</span>
           <span className={`text-sm font-semibold tracking-tight text-[var(--text-main)] truncate ${
             task.status === 'completed' ? 'line-through text-[var(--text-muted)] font-medium' : ''
           }`}>
@@ -83,47 +86,47 @@ const isOverdue = (isDateOverdue || isTimeOverdue) && task.status !== 'completed
         <div className="flex flex-wrap gap-2 mt-2 items-center">
           {/* Project */}
           {task.project && (
-            <span className="tag-pill text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+            <span className={`${styles.tagPill} text-green-600 dark:text-green-400 font-bold flex items-center gap-1`}>
               <i className="fas fa-circle text-[6px]"></i> {task.project}
             </span>
           )}
 
           {/* Due Date */}
           {(task.dueDate || task.dueTime) && (
-  <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
-    isOverdue ? 'text-red-500 font-extrabold animate-pulse' : 'text-orange-600 font-medium'
-  }`}>
-    <i className="fas fa-clock text-[9px]"></i> 
-    
-    {/* Case 1: Has a due date with optional time */}
-    {task.dueDate && (
-      task.dueDate.includes('T')
-        ? dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        : dDate?.toLocaleDateString()
-    )}
-    
-    {/* Case 2: Time-only (e.g., Recurring daily tasks) */}
-    {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}
-    
-    {isOverdue && ' (Overdue)'}
-  </span>
-)}
+            <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
+              isOverdue ? `${styles.overdue} animate-pulse` : 'text-orange-600 font-medium'
+            }`}>
+              <i className="fas fa-clock text-[9px]"></i> 
+              
+              {/* Case 1: Has a due date with optional time */}
+              {task.dueDate && (
+                task.dueDate.includes('T')
+                  ? dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  : dDate?.toLocaleDateString()
+              )}
+              
+              {/* Case 2: Time-only (e.g., Recurring daily tasks) */}
+              {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}
+              
+              {isOverdue && ' (Overdue)'}
+            </span>
+          )}
           
           {/* Tags */}
           {task.tags.map(tag => (
-            <span key={tag} className="tag-pill">{tag}</span>
+            <span key={tag} className={styles.tagPill}>{tag}</span>
           ))}
           
           {/* Recurrence */}
           {task.recurrence && (
-            <span className="tag-pill text-purple-500 flex items-center gap-1">
+            <span className={`${styles.tagPill} text-purple-500 flex items-center gap-1`}>
               <i className="fas fa-redo text-[8px]"></i> {task.recurrence}
             </span>
           )}
           
           {/* Assignee */}
           {showAssignee && (
-            <span className="tag-pill text-blue-500 font-bold flex items-center gap-1">
+            <span className={`${styles.tagPill} text-blue-500 font-bold flex items-center gap-1`}>
               <i className="fas fa-user text-[8px]"></i> {assigneeName}
             </span>
           )}

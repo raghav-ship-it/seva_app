@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useStore } from '@/store/useStore';
-import TaskItem from '@/components/TaskItem';
-import FAB from '@/components/FAB';
+import TaskItem from '@/components/TaskItem/TaskItem';
+import FAB from '@/components/FAB/FAB';
 import ReminderAlert from '@/components/ReminderAlert';
 import { getLocalDateStr } from '@/lib/date';
 import { doesTaskOccurOnDate } from '@/lib/recurrence';

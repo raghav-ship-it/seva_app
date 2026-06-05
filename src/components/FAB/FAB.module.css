@@ -1,0 +1,40 @@
+/* FAB Styling */
+.fab {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 56px;
+    height: 56px;
+    background: var(--accent);
+    color: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(222, 76, 74, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 500;
+    font-size: 20px;
+    border: none;
+    outline: none;
+}
+
+@media (max-width: 768px) {
+    .fab {
+        bottom: 100px; /* Shift up to clear mobile bottom nav */
+        right: 20px;
+        width: 48px;
+        height: 48px;
+    }
+}
+
+.fab:hover {
+    transform: scale(1.1) translateY(-4px);
+    background: var(--accent-hover);
+    box-shadow: 0 12px 32px rgba(222, 76, 74, 0.55);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
