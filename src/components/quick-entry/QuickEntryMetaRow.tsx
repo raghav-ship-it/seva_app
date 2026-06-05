@@ -9,7 +9,7 @@ export interface QuickEntryMetaRowProps {
     assigneeId: string | null;
     projectId: string | null;
     tags: string[];
-    priority: Priority;
+    priority: Priority|null;
     dueDate: string | null;
     dueTime: string | null;
     reminder: string | null;
@@ -71,6 +71,24 @@ export default function QuickEntryMetaRow({
                 : 'Assignee'}
             </span>
           </button>
+
+          {activePopover === 'assignee' && (
+            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] flex flex-col p-1">
+              {users.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => {
+                    setStagedMeta((s: any) => ({ ...s, assigneeId: u.id }));
+                    setActivePopover(null);
+                  }}
+                  className="text-left px-2 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded text-gray-700 flex items-center gap-2"
+                >
+                  <i className="fas fa-user text-gray-400 text-[10px]"></i>
+                  {u.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Priority */}
@@ -78,11 +96,33 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'priority' ? null : 'priority')}
-            className="h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500"
+            className={`h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500 ${
+              stagedMeta.priority ? 'border-red-200 bg-red-50/40 text-red-600 hover:bg-red-50' : ''
+            }`}
           >
             <i className="far fa-flag text-[10px]"></i>
-            <span>{stagedMeta.priority || 'Priority'}</span>
+            <span>{stagedMeta.priority ? stagedMeta.priority.toUpperCase() : 'Priority'}</span>
           </button>
+
+          {activePopover === 'priority' && (
+            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[120px] flex flex-col p-1">
+              {(['p1', 'p2', 'p3', 'p4'] as Priority[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => {
+                    setStagedMeta((s: any) => ({ ...s, priority: p }));
+                    setActivePopover(null);
+                  }}
+                  className="text-left px-2 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded text-gray-700 flex items-center gap-2"
+                >
+                  <i className={`fas fa-flag text-[10px] ${
+                    p === 'p1' ? 'text-red-500' : p === 'p2' ? 'text-orange-500' : p === 'p3' ? 'text-blue-500' : 'text-gray-400'
+                  }`}></i>
+                  {p.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recurrence */}

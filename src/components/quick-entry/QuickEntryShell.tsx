@@ -20,33 +20,23 @@ export default function QuickEntryShell({
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
 
-  useEffect(() => {
-    if (!isOpen) return;
-    return () => {
-      // nothing
-    };
-  }, [isOpen]);
+      // 2. Clear out the inline pinning styles to let it animate to the center layout
+      
 
   if (!isOpen && !isClosing) return null;
 
   return (
-    <div className="fixed inset-0 z-50" role="presentation">
-      {/* Backdrop */}
+    <div
+      // flex items-center justify-center keeps the fallback / target layout perfectly centered
+      className={
+        'fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 transition-opacity duration-200 ' +
+        (isClosing ? 'opacity-0' : 'opacity-100')
+      }
+      onClick={onRequestClose}
+      role="presentation"
+    >
       <div
-        className="absolute inset-0 bg-black/40"
-        onClick={() => {
-          if (isOpen && !isClosing) onRequestClose();
-        }}
-      />
-
-      {/* Sheet */}
-      <div
-        className={
-          'relative bg-white rounded-xl shadow-xl w-full max-w-xl border border-gray-200 overflow-visible flex flex-col text-gray-800 origin-top p-0 ' +
-          (isClosing
-            ? 'opacity-0 scale-[0.98] translate-y-2 transition-all duration-200'
-            : 'opacity-100 scale-100 translate-y-0 transition-all duration-200')
-        }
+        className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-visible flex flex-col text-gray-800"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -57,4 +47,3 @@ export default function QuickEntryShell({
     </div>
   );
 }
-

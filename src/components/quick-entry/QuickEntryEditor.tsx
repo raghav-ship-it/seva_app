@@ -6,7 +6,7 @@ import type { Editor } from '@tiptap/react';
 import { getLocalDateStr } from '@/lib/date';
 
 
-export interface QuickEntryEditorProps {
+export interface QuickEntryEditorProps { // props for the editor to understand and render the content, as well as manage the state of the meta popovers and menu
   editor: Editor | null;
   EditorContent: React.ComponentType<any>;
 
@@ -19,7 +19,7 @@ export interface QuickEntryEditorProps {
     assigneeId: string | null;
     projectId: string | null;
     tags: string[];
-    priority: 'p1' | 'p2' | 'p3' | 'p4';
+    priority: 'p1' | 'p2' | 'p3' | 'p4'|null;
     dueDate: string | null;
     dueTime: string | null;
     reminder: string | null;
@@ -55,7 +55,7 @@ export interface QuickEntryEditorProps {
   removeTag: (tag: string) => void;
 
   popoverRef: React.RefObject<HTMLDivElement | null>;
-  datePickerRef: React.RefObject<HTMLInputElement | null>;
+  datePickerRef: React.RefObject<HTMLDivElement | null>;
   setStagedMeta: (updater: any) => void;
 }
 
@@ -112,7 +112,7 @@ export default function QuickEntryEditor({
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         placeholder="Description"
-        className="w-full text-xs text-gray-500 bg-transparent border-none outline-none resize-none min-h-[40px] p-0 placeholder-gray-400"
+        className=" text-xs text-gray-500 bg-transparent border-none outline-none resize-none min-h-[40px] p-0 placeholder-gray-400"
       />
 
 
@@ -121,7 +121,7 @@ export default function QuickEntryEditor({
       <input
         ref={datePickerRef}
         type="date"
-        className="hidden"
+        className="absolute left-0 top-0 opacity-0 pointer-events-none w-full h-full"
         onChange={(e) => {
           setStagedMeta((s: any) => ({ ...s, dueDate: e.target.value, dueTime: null }));
           editor?.commands.focus('end');

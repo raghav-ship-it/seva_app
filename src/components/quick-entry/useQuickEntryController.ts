@@ -56,7 +56,7 @@ export function useQuickEntryController({
     assigneeId: string | null;
     projectId: string | null;
     tags: string[];
-    priority: Priority;
+    priority: Priority | null;
     dueDate: string | null;
     dueTime: string | null;
     reminder: string | null;
@@ -65,7 +65,7 @@ export function useQuickEntryController({
     assigneeId: null,
     projectId: defaultProject,
     tags: [],
-    priority: 'p4',
+    priority: null,
     dueDate: defaultDueDate,
     dueTime: null,
     reminder: null,
@@ -130,8 +130,52 @@ export function useQuickEntryController({
       }
     }
 
+    if (lastWord.startsWith('!')) {
+      const query = lastWord.slice(1).toLowerCase();
+      const filtered = (['p1', 'p2', 'p3', 'p4'] as Priority[])
+        .filter(p => p.includes(query))
+        .map(p => ({ icon: 'flag', label: p.toUpperCase(), val: p, type: 'priority' }));
+      if (filtered.length) {
+        setMenu({ items: filtered, type: 'priority', index: 0, startPos: text.length - lastWord.length });
+        return;
+      }
+    }
+
+    if (lastWord.startsWith('^')) {
+      const query = lastWord.slice(1).toLowerCase();
+      const filtered = projects
+        .filter((p: string) => p.toLowerCase().includes(query))
+        .map((p: string) => ({ icon: 'folder', label: p, val: p, type: 'project' }));
+      if (filtered.length) {
+        setMenu({ items: filtered, type: 'project', index: 0, startPos: text.length - lastWord.length });
+        return;
+      }
+    }
+
+    if (lastWord.startsWith('+')) {
+      const query = lastWord.slice(1).toLowerCase();
+      const filtered = ['0', '5', '10', '15', '30', '60']
+        .filter(r => r.includes(query))
+        .map(r => ({ icon: 'bell', label: `${r}m before`, val: r, type: 'reminder' }));
+      if (filtered.length) {
+        setMenu({ items: filtered, type: 'reminder', index: 0, startPos: text.length - lastWord.length });
+        return;
+      }
+    }
+
+    if (lastWord.startsWith('*')) {
+      const query = lastWord.slice(1).toLowerCase();
+      const filtered = ['daily', 'weekly', 'monthly']
+        .filter(r => r.includes(query))
+        .map(r => ({ icon: 'redo', label: r.charAt(0).toUpperCase() + r.slice(1), val: r, type: 'recurrence' }));
+      if (filtered.length) {
+        setMenu({ items: filtered, type: 'recurrence', index: 0, startPos: text.length - lastWord.length });
+        return;
+      }
+    }
+
     setMenu(null);
-  }, [users, tags]);
+  }, [users, tags, projects]);
 
   const editor = useEditor({
     extensions: [
@@ -212,6 +256,13 @@ export function useQuickEntryController({
     };
   }, [editor, tokenHighlightPlugin]);
 
+  useEffect(() => {
+    if (activePopover === 'schedule' && datePickerRef.current) {
+      (datePickerRef.current as any).showPicker?.();
+      setActivePopover(null);
+    }
+  }, [activePopover]);
+
   const applyToken = useCallback((type: string, val: any) => {
     if (!editor || !menu) return;
 
@@ -243,10 +294,11 @@ export function useQuickEntryController({
     // Replace the current trigger word (the last word that created the menu)
     const text = editor.getText();
     const before = text.slice(0, Math.max(0, menu.startPos));
-    const after = text.slice(menu.startPos);
+    const words = text.split(/\s+/);
+    const lastWordLength = (words[words.length - 1] || '').length;
+    const after = text.slice(menu.startPos + lastWordLength);
 
-    // after currently starts with the lastWord; drop it and trailing space
-    const replaced = `${before}${tokenToInsert} `;
+    const replaced = `${before}${tokenToInsert} ${after}`;
 
     editor.commands.setContent(replaced.trimEnd());
     setTitle(replaced.trimEnd());
@@ -304,7 +356,7 @@ export function useQuickEntryController({
       assigneeId: null,
       projectId: defaultProject,
       tags: [],
-      priority: 'p4',
+      priority: null,
       dueDate: defaultDueDate,
       dueTime: null,
       reminder: null,
