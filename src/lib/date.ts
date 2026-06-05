@@ -1,5 +1,30 @@
 import { Recurrence } from '@/lib/types';
 
+export function parseNaturalTime(text: string): string | null {
+  // Regex for HH:MM
+  const timeRegex = /(\d{1,2}):(\d{2})/;
+  // Regex for H(H)am/pm
+  const amPmRegex = /(\d{1,2})\s?(am|pm|a\.m\.|p\.m\.)/i;
+
+  const amPmMatch = text.match(amPmRegex);
+  if (amPmMatch) {
+    let hours = parseInt(amPmMatch[1], 10);
+    const amPm = amPmMatch[2].toLowerCase();
+    if (amPm.includes('p') && hours < 12) hours += 12;
+    if (amPm.includes('a') && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, '0')}:00`;
+  }
+
+  const timeMatch = text.match(timeRegex);
+  if (timeMatch) {
+    const hours = String(timeMatch[1]).padStart(2, '0');
+    const minutes = timeMatch[2];
+    return `${hours}:${minutes}`;
+  }
+
+  return null;
+}
+
 export function getLocalDateStr(offset = 0) {
   const date = new Date();
   date.setDate(date.getDate() + offset);

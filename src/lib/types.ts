@@ -7,6 +7,7 @@ export interface User {
 }
 
 export type TaskStatus = 'pending' | 'in_progress' | 'review' | 'completed';
+export type AlarmStatus = 'draft' | 'scheduled' | 'fired' | 'dismissed' | 'synced';
 export type Priority = 'p1' | 'p2' | 'p3' | 'p4';
 export type Recurrence = 'daily' | 'weekly' | 'monthly' | null;
 

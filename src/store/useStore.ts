@@ -167,6 +167,7 @@ export const useStore = create<AppStore>()(
                   title: t.title,
                   desc: t.desc,
                   dueDate: nextDate.toISOString().slice(0, 16),
+                  dueTime: t.dueTime,
                   priority: t.priority,
                   tags: t.tags,
                   assigneeId: t.assigneeId,

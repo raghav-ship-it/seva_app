@@ -9,7 +9,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 import { useStore } from '@/store/useStore';
 import { Priority, Recurrence } from '@/lib/types';
-import { getLocalDateStr } from '@/lib/date';
+import { getLocalDateStr, parseNaturalTime } from '@/lib/date';
 
 export const WISDOM_QUOTES: Record<string, { quote: string; source: string }> = {
   work: {
@@ -66,7 +66,7 @@ export function useQuickEntryController({
     projectId: defaultProject,
     tags: [],
     priority: null,
-    dueDate: defaultDueDate,
+    dueDate: defaultDueDate || getLocalDateStr(),
     dueTime: null,
     reminder: null,
     recurrence: null,
@@ -102,9 +102,21 @@ export function useQuickEntryController({
   const processTextContent = useCallback((text: string) => {
     setTitle(text);
 
+    // Natural Language Time Parsing
+    const parsedTime = parseNaturalTime(text);
+    if (parsedTime) {
+      setStagedMeta(s => ({
+        ...s,
+        dueTime: parsedTime,
+        // If recurrence set but no date, default to today
+        dueDate: s.recurrence && !s.dueDate ? getLocalDateStr() : s.dueDate
+      }));
+    }
+
     // Look back extraction parsing checks
     const words = text.split(/\s+/);
     const lastWord = words[words.length - 1] || '';
+    // ... rest of existing token logic
 
     if (lastWord.startsWith('@')) {
       const query = lastWord.slice(1).toLowerCase();
@@ -247,13 +259,35 @@ export function useQuickEntryController({
               const regex = /([@#^!+*]\w+)/g;
               let match;
               while ((match = regex.exec(node.text)) !== null) {
-                const start = pos + match.index;
-                const end = start + match[0].length;
-                decorations.push(
-                  Decoration.inline(start, end, {
-                    class: 'text-blue-600 font-semibold bg-blue-50 px-0.5 rounded',
-                  })
-                );
+                const token = match[0];
+                const type = token[0];
+                const value = token.slice(1).toLowerCase();
+                let isValid = false;
+
+                // Validate based on token type
+                if (type === '@') {
+                  isValid = users.some(u => u.name.toLowerCase().includes(value));
+                } else if (type === '#') {
+                  isValid = tags.some(t => t.toLowerCase() === value);
+                } else if (type === '!') {
+                  isValid = ['p1', 'p2', 'p3', 'p4'].includes(value);
+                } else if (type === '^') {
+                  isValid = projects.some(p => p.toLowerCase() === value);
+                } else if (type === '+') {
+                  isValid = ['0', '5', '10', '15', '30', '60'].includes(value);
+                } else if (type === '*') {
+                  isValid = ['daily', 'weekly', 'monthly'].includes(value);
+                }
+
+                if (isValid) {
+                  const start = pos + match.index;
+                  const end = start + match[0].length;
+                  decorations.push(
+                    Decoration.inline(start, end, {
+                      class: 'text-blue-600 font-semibold bg-blue-50 px-0.5 rounded',
+                    })
+                  );
+                }
               }
             }
           });
@@ -261,7 +295,7 @@ export function useQuickEntryController({
         },
       },
     });
-  }, []);
+  }, [users, tags, projects]);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) {

@@ -120,13 +120,13 @@ const TaskDetailDrawer = () => {
     <div className={`fixed inset-0 z-[1000] flex items-end justify-center ${styles.drawerOverlay}`} onClick={closeTaskDetail}>
       {/* Gita Wisdom Tooltip/Floating Element */}
       <div 
-        className={`relative bg-[var(--bg-primary)] border-t border-[var(--border-color)] w-full max-w-2xl h-[85vh] max-h-[750px] rounded-t-2xl shadow-2xl flex flex-col ${styles.drawerSlideUp} overflow-visible`}
+        className={`relative ${styles.drawerContainer} ${styles.drawerSlideUp}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header Drag Handle */}
-        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto my-3 flex-shrink-0" />
+        <div className={styles.handle} />
         
-        <div className="flex-1 overflow-y-auto px-6 pb-6 no-scrollbar">
+        <div className={styles.contentArea}>
           {/* Main Content Area */}
           <div className="flex flex-col gap-6">
             
@@ -136,7 +136,7 @@ const TaskDetailDrawer = () => {
                 <input 
                   value={title}
                   onChange={(e) => { setTitle(e.target.value); handleUpdate({ title: e.target.value }); }}
-                  className="text-2xl font-black text-[var(--text-main)] bg-transparent border-none outline-none w-full tracking-tight placeholder:text-gray-300"
+                  className={styles.taskTitleInput}
                   placeholder="Task Name"
                 />
                 <button 
@@ -163,12 +163,12 @@ const TaskDetailDrawer = () => {
                   ))}
                 </div>
               )}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className={styles.toolbar}>
                 {/* Project Select */}
                 <div className="relative" ref={activeSelect === 'project' ? dropdownRef : null}>
                   <button 
                     onClick={() => setActiveSelect(activeSelect === 'project' ? null : 'project')}
-                    className={`tag-pill flex items-center gap-2 py-1.5 px-3 border border-[var(--border-color)] rounded-lg text-xs font-bold transition-all ${
+                    className={`${styles.tagPill} ${
                       task.project ? 'text-green-600 bg-green-50/50' : 'text-gray-500 hover:bg-gray-50'
                     }`}
                   >
@@ -176,7 +176,7 @@ const TaskDetailDrawer = () => {
                     {task.project || 'Project'}
                   </button>
                   {activeSelect === 'project' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className={styles.dropdown}>
                       <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Project</div>
                       {projects.map(p => (
                         <button 
@@ -196,11 +196,63 @@ const TaskDetailDrawer = () => {
                   )}
                 </div>
 
+                {/* Due Date & Time */}
+                <div className={`${styles.dateSelect} ${task.dueDate ? 'text-orange-600 bg-orange-50/50' : 'text-gray-500'}`}>
+                  <button 
+                    onClick={() => {
+                        const iso = getLocalIsoDateTime(0, '12:00');
+                        const [date, time] = iso.split('T');
+                        handleUpdate({ dueDate: date, dueTime: time });
+                    }}
+                    className="mr-2 text-[8px] hover:text-orange-600"
+                    title="Set for Today"
+                  >
+                    <i className="fas fa-calendar-day"></i>
+                  </button>
+                  <i className="fas fa-calendar-alt text-[10px]"></i>
+                  <input 
+                    type="date"
+                    value={task.dueDate || ''}
+                    onChange={(e) => handleUpdate({ dueDate: e.target.value })}
+                    className={styles.dateSelectInput}
+                  />
+                  <input 
+                    type="time"
+                    value={task.dueTime || ''}
+                    onChange={(e) => handleUpdate({ dueTime: e.target.value })}
+                    className={styles.dateSelectInput}
+                  />
+                </div>
+
+                {/* Recurrence Select */}
+                <div className="relative" ref={activeSelect === 'recurrence' ? dropdownRef : null}>
+                  <button 
+                    onClick={() => setActiveSelect(activeSelect === 'recurrence' ? null : 'recurrence')}
+                    className={`${styles.tagPill} ${task.recurrence ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500'}`}
+                  >
+                    <i className="fas fa-sync-alt text-[10px]"></i>
+                    {task.recurrence || 'Recurrence'}
+                  </button>
+                  {activeSelect === 'recurrence' && (
+                    <div className={styles.dropdown}>
+                      {(['daily', 'weekly', 'monthly'] as Recurrence[]).map(r => (
+                        <button 
+                          key={r || 'none'}
+                          onClick={() => { handleUpdate({ recurrence: r }); setActiveSelect(null); }}
+                          className={`px-3 py-2 rounded-lg text-xs text-left hover:bg-[var(--border-color)] ${task.recurrence === r ? 'bg-orange-50 text-orange-600 font-bold' : ''}`}
+                        >
+                          {r ? r.charAt(0).toUpperCase() + r.slice(1) : 'No Recurrence'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Assignee Select */}
                 <div className="relative" ref={activeSelect === 'assignee' ? dropdownRef : null}>
                   <button 
                     onClick={() => setActiveSelect(activeSelect === 'assignee' ? null : 'assignee')}
-                    className={`tag-pill flex items-center gap-2 py-1.5 px-3 border border-[var(--border-color)] rounded-lg text-xs font-bold transition-all ${
+                    className={`${styles.tagPill} ${
                       task.assigneeId ? 'text-blue-600 bg-blue-50/50' : 'text-gray-500 hover:bg-gray-50'
                     }`}
                   >
@@ -208,7 +260,7 @@ const TaskDetailDrawer = () => {
                     {users.find(u => u.id === task.assigneeId)?.name.split(' (')[0] || 'Assignee'}
                   </button>
                   {activeSelect === 'assignee' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className={styles.dropdown}>
                       {users.map(u => (
                         <button 
                           key={u.id} 
@@ -229,7 +281,7 @@ const TaskDetailDrawer = () => {
                 <div className="relative" ref={activeSelect === 'priority' ? dropdownRef : null}>
                   <button 
                     onClick={() => setActiveSelect(activeSelect === 'priority' ? null : 'priority')}
-                    className={`tag-pill flex items-center gap-2 py-1.5 px-3 border border-[var(--border-color)] rounded-lg text-xs font-bold transition-all ${
+                    className={`${styles.tagPill} ${
                       task.priority === 'p1' ? 'text-red-600 bg-red-50' : 
                       task.priority === 'p2' ? 'text-orange-600 bg-orange-50' :
                       task.priority === 'p3' ? 'text-blue-600 bg-blue-50' : 'text-gray-500'
@@ -239,7 +291,7 @@ const TaskDetailDrawer = () => {
                     {task.priority?.toUpperCase() || 'Priority'}
                   </button>
                   {activeSelect === 'priority' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-40 p-2 flex flex-col gap-1">
+                    <div className={styles.dropdown}>
                       {['p1', 'p2', 'p3', 'p4'].map(p => (
                         <button 
                           key={p} 
@@ -258,13 +310,13 @@ const TaskDetailDrawer = () => {
                 <div className="relative" ref={activeSelect === 'tags' ? dropdownRef : null}>
                   <button 
                     onClick={() => setActiveSelect(activeSelect === 'tags' ? null : 'tags')}
-                    className="tag-pill flex items-center gap-2 py-1.5 px-3 border border-[var(--border-color)] rounded-lg text-xs font-bold text-purple-600 bg-purple-50/50 hover:bg-purple-50 transition-all"
+                    className={`${styles.tagPill} text-purple-600 bg-purple-50/50 hover:bg-purple-50`}
                   >
                     <i className="fas fa-tag text-[10px]"></i>
                     {task.tags.length > 0 ? `${task.tags.length} Tags` : 'Tags'}
                   </button>
                   {activeSelect === 'tags' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white  border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className={styles.dropdown}>
                       {tags.map(t => (
                         <button 
                           key={t} 
@@ -292,7 +344,7 @@ const TaskDetailDrawer = () => {
               <textarea 
                 value={desc}
                 onChange={(e) => { setDesc(e.target.value); handleUpdate({ desc: e.target.value }); }}
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl p-4 text-sm text-[var(--text-main)] outline-none min-h-[120px] focus:border-orange-500/50 transition-all resize-none placeholder:italic"
+                className={styles.descTextArea}
                 placeholder="Add a detailed description... maybe some scriptures?"
               />
             </div>
