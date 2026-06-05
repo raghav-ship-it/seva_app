@@ -1,0 +1,30 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+  transition: opacity 0.2s;
+}
+
+.overlayClosing {
+  opacity: 0;
+}
+
+.overlayOpen {
+  opacity: 1;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  color: #1f2937;
+}

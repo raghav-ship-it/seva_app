@@ -275,7 +275,16 @@ body {
     transform: scale(0.95);
 }
 
-/* Redesigned Quick Task Entry Mirror for Inline Highlighting */
+/* Editor Specific Overrides */
+.ProseMirror {
+    outline: none !important;
+    caret-color: var(--text-main);
+    min-height: 1.5rem;
+}
+
+.ProseMirror:focus {
+    outline: none !important;
+}
 .mirror-input-container {
     position: relative;
     width: 100%;

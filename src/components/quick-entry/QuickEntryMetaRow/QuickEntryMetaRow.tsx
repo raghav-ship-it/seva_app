@@ -3,6 +3,7 @@
 import React from 'react';
 import { getLocalDateStr } from '@/lib/date';
 import type { Priority, Recurrence } from '@/lib/types';
+import styles from './QuickEntryMetaRow.module.css';
 
 export interface QuickEntryMetaRowProps {
   stagedMeta: {
@@ -36,14 +37,14 @@ export default function QuickEntryMetaRow({
   return (
     <div>
       {/* Horizontal Meta Custom Badges */}
-      <div className="flex flex-wrap items-center gap-1.5 mt-2 px-4">
+      <div className={styles.metaContainer}>
         {/* Schedule */}
-        <div className="relative">
+        <div className={styles.metaItem}>
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'schedule' ? null : 'schedule')}
-            className={`h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500 ${
-              stagedMeta.dueDate ? 'border-blue-200 bg-blue-50/40 text-blue-600 hover:bg-blue-50' : ''
+            className={`${styles.metaButton} ${
+              stagedMeta.dueDate ? styles.metaButtonActive : ''
             }`}
           >
             <i className="far fa-calendar text-[10px]"></i>
@@ -56,12 +57,12 @@ export default function QuickEntryMetaRow({
         </div>
 
         {/* Assignee */}
-        <div className="relative">
+        <div className={styles.metaItem}>
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'assignee' ? null : 'assignee')}
-            className={`h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500 ${
-              stagedMeta.assigneeId ? 'border-orange-200 bg-orange-50/40 text-orange-600 hover:bg-orange-50' : ''
+            className={`${styles.metaButton} ${
+              stagedMeta.assigneeId ? styles.metaButtonAssigneeActive : ''
             }`}
           >
             <i className="far fa-user text-[10px]"></i>
@@ -73,7 +74,7 @@ export default function QuickEntryMetaRow({
           </button>
 
           {activePopover === 'assignee' && (
-            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] flex flex-col p-1">
+            <div className={styles.popover}>
               {users.map((u) => (
                 <button
                   key={u.id}
@@ -81,7 +82,7 @@ export default function QuickEntryMetaRow({
                     setStagedMeta((s: any) => ({ ...s, assigneeId: u.id }));
                     setActivePopover(null);
                   }}
-                  className="text-left px-2 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded text-gray-700 flex items-center gap-2"
+                  className={styles.popoverItem}
                 >
                   <i className="fas fa-user text-gray-400 text-[10px]"></i>
                   {u.name}
@@ -92,12 +93,12 @@ export default function QuickEntryMetaRow({
         </div>
 
         {/* Priority */}
-        <div className="relative">
+        <div className={styles.metaItem}>
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'priority' ? null : 'priority')}
-            className={`h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500 ${
-              stagedMeta.priority ? 'border-red-200 bg-red-50/40 text-red-600 hover:bg-red-50' : ''
+            className={`${styles.metaButton} ${
+              stagedMeta.priority ? styles.metaButtonPriorityActive : ''
             }`}
           >
             <i className="far fa-flag text-[10px]"></i>
@@ -105,7 +106,7 @@ export default function QuickEntryMetaRow({
           </button>
 
           {activePopover === 'priority' && (
-            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[120px] flex flex-col p-1">
+            <div className={styles.popover}>
               {(['p1', 'p2', 'p3', 'p4'] as Priority[]).map((p) => (
                 <button
                   key={p}
@@ -113,7 +114,7 @@ export default function QuickEntryMetaRow({
                     setStagedMeta((s: any) => ({ ...s, priority: p }));
                     setActivePopover(null);
                   }}
-                  className="text-left px-2 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded text-gray-700 flex items-center gap-2"
+                  className={styles.popoverItem}
                 >
                   <i className={`fas fa-flag text-[10px] ${
                     p === 'p1' ? 'text-red-500' : p === 'p2' ? 'text-orange-500' : p === 'p3' ? 'text-blue-500' : 'text-gray-400'
@@ -126,12 +127,12 @@ export default function QuickEntryMetaRow({
         </div>
 
         {/* Recurrence */}
-        <div className="relative">
+        <div className={styles.metaItem}>
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'recurrence' ? null : 'recurrence')}
-            className={`h-6 px-2 text-[11px] font-medium border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors text-gray-500 ${
-              stagedMeta.recurrence ? 'border-teal-200 bg-teal-50/40 text-teal-600 hover:bg-teal-50' : ''
+            className={`${styles.metaButton} ${
+              stagedMeta.recurrence ? styles.metaButtonRecurrenceActive : ''
             }`}
           >
             <i className="fas fa-redo text-[9px]"></i>
@@ -139,7 +140,7 @@ export default function QuickEntryMetaRow({
           </button>
 
           {activePopover === 'recurrence' && (
-            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[140px] flex flex-col text-left p-1">
+            <div className={styles.popover}>
               {[
                 { label: 'None', val: null },
                 { label: 'Daily', val: 'daily' },
@@ -152,7 +153,7 @@ export default function QuickEntryMetaRow({
                     setStagedMeta((s: any) => ({ ...s, recurrence: rec.val as any }));
                     setActivePopover(null);
                   }}
-                  className="text-left px-2 py-1 text-xs font-semibold hover:bg-gray-50 rounded text-gray-700"
+                  className={styles.popoverItem}
                 >
                   {rec.label}
                 </button>
@@ -164,17 +165,17 @@ export default function QuickEntryMetaRow({
 
       {/* Chips */}
       {stagedMeta.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2 px-4">
+        <div className={styles.tagsContainer}>
           {stagedMeta.tags.map((t) => (
             <span
               key={t}
-              className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-100 px-2 py-0.5 rounded text-[11px] font-medium"
+              className={styles.tag}
             >
               #{t}
               <button
                 type="button"
                 onClick={() => removeTag(t)}
-                className="hover:text-purple-900 ml-0.5 font-bold"
+                className={styles.removeTagBtn}
               >
                 &times;
               </button>

@@ -1,10 +1,10 @@
 'use client';
 
 import { useQuickEntryController } from '@/components/quick-entry/useQuickEntryController';
-import QuickEntryShell from '@/components/quick-entry/QuickEntryShell';
-import QuickEntryEditor from '@/components/quick-entry/QuickEntryEditor';
-import QuickEntryMetaRow from '@/components/quick-entry/QuickEntryMetaRow';
-import QuickEntryFooter from '@/components/quick-entry/QuickEntryFooter';
+import QuickEntryShell from '@/components/quick-entry/QuickEntryShell/QuickEntryShell';
+import QuickEntryEditor from '@/components/quick-entry/QuickEntryEditor/QuickEntryEditor';
+import QuickEntryMetaRow from '@/components/quick-entry/QuickEntryMetaRow/QuickEntryMetaRow';
+import QuickEntryFooter from '@/components/quick-entry/QuickEntryFooter/QuickEntryFooter';
 
 export interface QuickEntryModalProps {
   isOpen: boolean;

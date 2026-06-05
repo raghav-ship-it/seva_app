@@ -1,0 +1,134 @@
+.metaContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+}
+
+.metaItem {
+  position: relative;
+}
+
+.metaButton {
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  color: #6b7280;
+}
+
+.metaButton:hover {
+  background-color: #f9fafb;
+}
+
+.metaButtonActive {
+  background-color: rgba(239, 246, 255, 0.4);
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.metaButtonActive:hover {
+  background-color: #eff6ff;
+}
+
+.metaButtonAssigneeActive {
+  border-color: #fed7aa;
+  background-color: rgba(255, 247, 237, 0.4);
+  color: #ea580c;
+}
+
+.metaButtonAssigneeActive:hover {
+  background-color: #fff7ed;
+}
+
+.metaButtonPriorityActive {
+  border-color: #fecaca;
+  background-color: rgba(254, 242, 242, 0.4);
+  color: #dc2626;
+}
+
+.metaButtonPriorityActive:hover {
+  background-color: #fef2f2;
+}
+
+.metaButtonRecurrenceActive {
+  border-color: #99f6e4;
+  background-color: rgba(240, 253, 250, 0.4);
+  color: #0d9488;
+}
+
+.metaButtonRecurrenceActive:hover {
+  background-color: #f0fdfa;
+}
+
+.popover {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 0.25rem;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  min-width: 10rem;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.popoverItem {
+  text-align: left;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.popoverItem:hover {
+  background-color: #f9fafb;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ede9fe;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.removeTagBtn {
+  margin-left: 0.125rem;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+
+.removeTagBtn:hover {
+  color: #5b21b6;
+}

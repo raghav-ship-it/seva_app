@@ -6,36 +6,6 @@ import { useStore } from '@/store/useStore';
 import { Priority, Recurrence, TaskAttachment } from '@/lib/types';
 import styles from './TaskDetailDrawer.module.css';
 
-const WISDOM_QUOTES: Record<string, { quote: string; source: string }> = {
-  'work': {
-    quote: "Perform your prescribed duty, for action is better than inaction.",
-    source: "Bhagavad-gita 3.8"
-  },
-  'marketing': {
-    quote: "Whatever action a great man performs, common men follow.",
-    source: "Bhagavad-gita 3.21"
-  },
-  'urgent': {
-    quote: "One who does not react to the dualities of pleasure and pain is fit for liberation.",
-    source: "Bhagavad-gita 2.15"
-  },
-  'low-effort': {
-    quote: "Yoga is the journey of the self, through the self, to the self.",
-    source: "Bhagavad-gita 6.18"
-  },
-  'personal': {
-    quote: "A person who is not disturbed by the incessant flow of desires can alone achieve peace.",
-    source: "Bhagavad-gita 2.70"
-  },
-  'shopping': {
-    quote: "He who is regulated in his habits of eating and sleeping can mitigate all pains.",
-    source: "Bhagavad-gita 6.17"
-  },
-  'cleaning': {
-    quote: "The temple of the Lord should be kept clean and decorated. Cleanliness is next to godliness.",
-    source: "Nectar of Devotion"
-  }
-};
 
 const TaskDetailDrawer = () => {
   const { 
@@ -143,29 +113,12 @@ const TaskDetailDrawer = () => {
   ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   // Gita Logic: Choose a quote based on project or description
-  const getGitaWisdom = () => {
-    const context = (task.project?.toLowerCase() || task.title.toLowerCase() || 'work');
-    const entry = Object.entries(WISDOM_QUOTES).find(([key]) => context.includes(key));
-    return entry ? entry[1] : WISDOM_QUOTES.work;
-  };
-  const wisdom = getGitaWisdom();
+  
+  
 
   return (
     <div className={`fixed inset-0 z-[1000] flex items-end justify-center ${styles.drawerOverlay}`} onClick={closeTaskDetail}>
       {/* Gita Wisdom Tooltip/Floating Element */}
-      <div 
-        className="absolute top-10 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-gray-800/95 p-4 rounded-2xl shadow-2xl border border-orange-200 dark:border-orange-900/30 max-w-sm text-center animate-in fade-in zoom-in duration-500 z-[1010]"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="text-orange-500 mb-2">
-          <i className="fas fa-om text-xl"></i>
-        </div>
-        <p className="text-sm font-serif italic text-gray-700 dark:text-gray-200 leading-relaxed">
-          "{wisdom.quote}"
-        </p>
-        <p className="text-[10px] font-bold text-orange-600 mt-2 uppercase tracking-widest">— {wisdom.source}</p>
-      </div>
-
       <div 
         className={`relative bg-[var(--bg-primary)] border-t border-[var(--border-color)] w-full max-w-2xl h-[85vh] max-h-[750px] rounded-t-2xl shadow-2xl flex flex-col ${styles.drawerSlideUp} overflow-visible`}
         onClick={e => e.stopPropagation()}
@@ -223,7 +176,7 @@ const TaskDetailDrawer = () => {
                     {task.project || 'Project'}
                   </button>
                   {activeSelect === 'project' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
                       <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Select Project</div>
                       {projects.map(p => (
                         <button 
@@ -255,7 +208,7 @@ const TaskDetailDrawer = () => {
                     {users.find(u => u.id === task.assigneeId)?.name.split(' (')[0] || 'Assignee'}
                   </button>
                   {activeSelect === 'assignee' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
                       {users.map(u => (
                         <button 
                           key={u.id} 
@@ -286,7 +239,7 @@ const TaskDetailDrawer = () => {
                     {task.priority?.toUpperCase() || 'Priority'}
                   </button>
                   {activeSelect === 'priority' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-40 p-2 flex flex-col gap-1">
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-40 p-2 flex flex-col gap-1">
                       {['p1', 'p2', 'p3', 'p4'].map(p => (
                         <button 
                           key={p} 
@@ -311,7 +264,7 @@ const TaskDetailDrawer = () => {
                     {task.tags.length > 0 ? `${task.tags.length} Tags` : 'Tags'}
                   </button>
                   {activeSelect === 'tags' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
+                    <div className="absolute top-full left-0 mt-2 bg-white  border border-[var(--border-color)] rounded-xl shadow-2xl z-[50] w-48 p-2 flex flex-col gap-1">
                       {tags.map(t => (
                         <button 
                           key={t} 
@@ -380,7 +333,7 @@ const TaskDetailDrawer = () => {
                             {item.attachments && item.attachments.length > 0 && (
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {item.attachments.map((a: any) => (
-                                  <div key={a.id} className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
+                                  <div key={a.id} className="p-2 rounded-lg bg-white border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
                                     <i className={`fas ${a.type === 'image' ? 'fa-image text-blue-500' : 'fa-file-alt text-gray-500'} text-xs`}></i>
                                     <span className="text-[10px] font-bold text-[var(--text-main)] truncate max-w-[100px]">{a.name}</span>
                                   </div>

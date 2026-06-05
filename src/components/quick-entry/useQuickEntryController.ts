@@ -112,6 +112,9 @@ export function useQuickEntryController({
         .filter((u: any) => u.name.toLowerCase().includes(query))
         .map((u: any) => ({ icon: 'user', label: u.name, val: u.id, type: 'assignee' }));
       
+      const exactMatch = users.find((u: any) => u.name.toLowerCase() === query);
+      if (exactMatch) setStagedMeta(s => ({ ...s, assigneeId: exactMatch.id }));
+      
       if (filtered.length) {
         setMenu({ items: filtered, type: 'assignee', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -124,6 +127,8 @@ export function useQuickEntryController({
         .filter((t: string) => t.toLowerCase().includes(query))
         .map((t: string) => ({ icon: 'tag', label: `#${t}`, val: t, type: 'tag' }));
       
+      if (tags.some(t => t.toLowerCase() === query)) setStagedMeta(s => ({ ...s, tags: s.tags.includes(query) ? s.tags : [...s.tags, query] }));
+
       if (filtered.length) {
         setMenu({ items: filtered, type: 'tag', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -132,9 +137,13 @@ export function useQuickEntryController({
 
     if (lastWord.startsWith('!')) {
       const query = lastWord.slice(1).toLowerCase();
-      const filtered = (['p1', 'p2', 'p3', 'p4'] as Priority[])
+      const priorities = ['p1', 'p2', 'p3', 'p4'] as Priority[];
+      const filtered = priorities
         .filter(p => p.includes(query))
         .map(p => ({ icon: 'flag', label: p.toUpperCase(), val: p, type: 'priority' }));
+      
+      if (priorities.includes(query as Priority)) setStagedMeta(s => ({ ...s, priority: query as Priority }));
+
       if (filtered.length) {
         setMenu({ items: filtered, type: 'priority', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -146,6 +155,9 @@ export function useQuickEntryController({
       const filtered = projects
         .filter((p: string) => p.toLowerCase().includes(query))
         .map((p: string) => ({ icon: 'folder', label: p, val: p, type: 'project' }));
+      
+      if (projects.some(p => p.toLowerCase() === query)) setStagedMeta(s => ({ ...s, projectId: projects.find(p => p.toLowerCase() === query) }));
+
       if (filtered.length) {
         setMenu({ items: filtered, type: 'project', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -154,9 +166,13 @@ export function useQuickEntryController({
 
     if (lastWord.startsWith('+')) {
       const query = lastWord.slice(1).toLowerCase();
-      const filtered = ['0', '5', '10', '15', '30', '60']
+      const reminders = ['0', '5', '10', '15', '30', '60'];
+      const filtered = reminders
         .filter(r => r.includes(query))
         .map(r => ({ icon: 'bell', label: `${r}m before`, val: r, type: 'reminder' }));
+      
+      if (reminders.includes(query)) setStagedMeta(s => ({ ...s, reminder: query }));
+
       if (filtered.length) {
         setMenu({ items: filtered, type: 'reminder', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -165,9 +181,13 @@ export function useQuickEntryController({
 
     if (lastWord.startsWith('*')) {
       const query = lastWord.slice(1).toLowerCase();
-      const filtered = ['daily', 'weekly', 'monthly']
+      const recurrences = ['daily', 'weekly', 'monthly'];
+      const filtered = recurrences
         .filter(r => r.includes(query))
         .map(r => ({ icon: 'redo', label: r.charAt(0).toUpperCase() + r.slice(1), val: r, type: 'recurrence' }));
+      
+      if (recurrences.includes(query)) setStagedMeta(s => ({ ...s, recurrence: query }));
+
       if (filtered.length) {
         setMenu({ items: filtered, type: 'recurrence', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -367,8 +387,35 @@ export function useQuickEntryController({
 
   const handleSave = () => {
     if (!title.trim()) return;
+
+    // Identify and remove tokens from the title
+    let cleanedTitle = title;
+    
+    const tokensToRemove: string[] = [];
+    if (stagedMeta.assigneeId) {
+      const user = users.find((u: any) => u.id === stagedMeta.assigneeId);
+      tokensToRemove.push(`@${user ? user.name.split(' ')[0] : stagedMeta.assigneeId}`);
+    }
+    if (stagedMeta.projectId) {
+      tokensToRemove.push(`^${stagedMeta.projectId}`);
+    }
+    stagedMeta.tags.forEach(t => tokensToRemove.push(`#${t}`));
+    if (stagedMeta.priority) {
+      tokensToRemove.push(`!${stagedMeta.priority}`);
+    }
+    if (stagedMeta.reminder) {
+      tokensToRemove.push(`+${stagedMeta.reminder}`);
+    }
+    if (stagedMeta.recurrence) {
+      tokensToRemove.push(`*${stagedMeta.recurrence}`);
+    }
+
+    tokensToRemove.forEach(token => {
+        cleanedTitle = cleanedTitle.replace(token, '').trim();
+    });
+
     addTask({
-      title: title.trim(),
+      title: cleanedTitle,
       description: desc.trim(),
       ...stagedMeta,
     });
