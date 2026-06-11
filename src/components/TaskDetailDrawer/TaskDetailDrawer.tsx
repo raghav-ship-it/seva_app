@@ -362,37 +362,36 @@ const TaskDetailDrawer = () => {
                 {activityFeed.map((item: any, index) => {
                   if (item.type === 'log') {
                     return (
-                      <div key={item.id || index} className={`${styles.timelineItemSystem} text-xs py-1`}>
+                      <div key={item.id || index} className={`${styles.timelineItemSystem} text-xs py-1 mb-2 ml-4`}>
                         <span className="text-gray-400 font-medium mr-1.5">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         <span className="text-[var(--text-muted)]">{item.text}</span>
                       </div>
                     );
                   } else {
                     const author = users.find(u => u.id === item.authorId);
+                    const isMe = item.authorId === currentUser?.id;
                     return (
-                      <div key={item.id || index} className={`${styles.timelineItemComment} py-2.5`}>
-                        <div className="flex items-start gap-3">
-                          <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-black text-orange-600 flex-shrink-0 mt-0.5 border border-orange-200">
-                            {author?.name.charAt(0)}
+                      <div key={item.id || index} className={`${styles.commentRow} ${isMe ? styles.commentRowMe : ''}`}>
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-black text-orange-600 flex-shrink-0 border border-orange-200 mt-1">
+                          {author?.name.charAt(0)}
+                        </div>
+                        <div className={`${styles.commentBubble} ${isMe ? styles.commentBubbleRight : styles.commentBubbleLeft}`}>
+                          <div className={`${styles.commentMeta} ${isMe ? styles.commentMetaMe : ''}`}>
+                            <span className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-wider">{author?.name.split(' (')[0]}</span>
+                            <span className="text-[9px] text-gray-400 font-bold">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-xs font-bold text-[var(--text-main)]">{author?.name.split(' (')[0]}</span>
-                              <span className="text-[9px] text-gray-400 font-medium">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <p className={`text-sm text-[var(--text-main)] mt-0.5 whitespace-pre-wrap leading-relaxed ${isMe ? 'text-right' : 'text-left'}`}>{item.text}</p>
+                          
+                          {item.attachments && item.attachments.length > 0 && (
+                            <div className={`flex flex-wrap gap-2 mt-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                              {item.attachments.map((a: any) => (
+                                <div key={a.id} className="p-2 rounded-lg bg-white/50 border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
+                                  <i className={`fas ${a.type === 'image' ? 'fa-image text-blue-500' : 'fa-file-alt text-gray-500'} text-[10px]`}></i>
+                                  <span className="text-[9px] font-bold text-[var(--text-main)] max-w-[80px] truncate">{a.name}</span>
+                                </div>
+                              ))}
                             </div>
-                            <p className="text-sm text-[var(--text-main)] mt-1 whitespace-pre-wrap leading-relaxed">{item.text}</p>
-                            
-                            {item.attachments && item.attachments.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                {item.attachments.map((a: any) => (
-                                  <div key={a.id} className="p-2 rounded-lg bg-white border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
-                                    <i className={`fas ${a.type === 'image' ? 'fa-image text-blue-500' : 'fa-file-alt text-gray-500'} text-xs`}></i>
-                                    <span className="text-[10px] font-bold text-[var(--text-main)] truncate max-w-[100px]">{a.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                     );

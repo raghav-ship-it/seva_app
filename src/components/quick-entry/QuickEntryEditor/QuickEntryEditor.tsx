@@ -77,10 +77,10 @@ export default function QuickEntryEditor({
           <EditorContent editor={editor} />
         </div>
 
-        <div className={styles.dictateBtn}>
+        {/*<div className={styles.dictateBtn}>
           <span className="opacity-70 text-[10px] uppercase font-mono">|||</span> DICTATE
           <i className={`fas fa-wave-square text-red-500 animate-pulse ${styles.dictateIcon}`}></i>
-        </div>
+        </div>**/}
 
         {menu && (
           <div className={styles.menu}>

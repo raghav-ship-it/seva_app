@@ -40,3 +40,22 @@
 .navTab i {
     font-size: 18px;
 }
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: var(--accent);
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 10px;
+    min-width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--bg-primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

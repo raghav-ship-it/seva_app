@@ -5,6 +5,7 @@ import "../styles/sidebar.css";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ClientLayout from "@/components/ClientLayout/ClientLayout";
 import BottomNav from "@/components/BottomNav/BottomNav";
+import MobileTopBar from "@/components/MobileTopBar/MobileTopBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
               <Sidebar />
             </div>
             <main className="flex-1 overflow-y-auto relative h-full pb-[70px] md:pb-0">
+              <MobileTopBar />
               {children}
             </main>
             <BottomNav />

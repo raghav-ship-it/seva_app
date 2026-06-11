@@ -438,13 +438,21 @@ export const useStore = create<AppStore>()(
 
       clearAdminNotifications: () => {
         set({ adminNotifications: [] });
+      },
+
+      toggleSidebar: () => {
+        set((state) => ({ isSidebarOpen: !state.isSidebarOpen }));
+      },
+
+      closeSidebar: () => {
+        set({ isSidebarOpen: false });
       }
     }),
     {
       name: 'seva-premium-storage',
       // Exclude temporary states from persistence
       partialize: (state) => {
-        const { isQuickEntryOpen, quickEntryDefaults, activeDetailTaskId, ...persisted } = state;
+        const { isQuickEntryOpen, quickEntryDefaults, activeDetailTaskId, isSidebarOpen, ...persisted } = state;
         return persisted;
       }
     }

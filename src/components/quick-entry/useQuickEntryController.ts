@@ -223,27 +223,41 @@ export function useQuickEntryController({
     },
   });
 
-  // Re-hydration side-effect sync loop
+  // Re-hydration side-effect sync loop - ONLY run once when opening
   useEffect(() => {
-    if (isOpen && editor && modalDraft && !editor.isDestroyed) {
-      isDraftLoadingRef.current = true;
-      editor.commands.setContent(modalDraft.title || '');
-      setTitle(modalDraft.title || '');
-      setDesc(modalDraft.desc || '');
-      if (modalDraft.stagedMeta) setStagedMeta(modalDraft.stagedMeta);
-      
-      setTimeout(() => {
-        isDraftLoadingRef.current = false;
+    if (isOpen && editor && !editor.isDestroyed) {
+      // Small delay to ensure editor is ready
+      const timer = setTimeout(() => {
+        if (modalDraft) {
+          isDraftLoadingRef.current = true;
+          editor.commands.setContent(modalDraft.title || '');
+          setTitle(modalDraft.title || '');
+          setDesc(modalDraft.desc || '');
+          if (modalDraft.stagedMeta) setStagedMeta(modalDraft.stagedMeta);
+          
+          setTimeout(() => {
+            isDraftLoadingRef.current = false;
+          }, 50);
+        } else {
+          // Clear if no draft
+          editor.commands.clearContent();
+          setTitle('');
+          setDesc('');
+        }
       }, 10);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, editor, modalDraft]);
+  }, [isOpen, editor]); // Removed modalDraft from dependencies to avoid loop
 
   // Handle draft auto-saves safely
   useEffect(() => {
     if (isOpen && !isDraftLoadingRef.current) {
-      if (title.trim() || desc.trim() || stagedMeta.tags.length > 0 || stagedMeta.dueDate) {
-        saveModalDraft({ title, desc, stagedMeta });
-      }
+      const timeout = setTimeout(() => {
+        if (title || desc || stagedMeta.tags.length > 0) {
+          saveModalDraft({ title, desc, stagedMeta });
+        }
+      }, 500); // Debounce save
+      return () => clearTimeout(timeout);
     }
   }, [title, desc, stagedMeta, isOpen, saveModalDraft]);
 

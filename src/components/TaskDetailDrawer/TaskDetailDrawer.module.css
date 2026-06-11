@@ -160,11 +160,52 @@
   background: var(--bg-secondary);
 }
 
-.dateSelectInput {
-  border: none;
-  background: transparent;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-main);
-  outline: none;
+.commentRow {
+  display: flex;
+  margin-bottom: 1.25rem;
+  gap: 0.75rem;
+  width: 100%;
 }
+
+.commentRowMe {
+  flex-direction: row-reverse;
+}
+
+.commentBubble {
+  max-width: 85%;
+  padding: 0.75rem 1rem;
+  border-radius: 1.25rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.commentBubbleLeft {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-top-left-radius: 0.25rem;
+}
+
+.commentBubbleRight {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-top-right-radius: 0.25rem;
+  align-items: flex-end;
+}
+
+:global(.dark-theme) .commentBubbleRight {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.commentMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.commentMetaMe {
+  flex-direction: row-reverse;
+}
+

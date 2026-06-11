@@ -13,7 +13,7 @@ interface TaskItemProps {
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
-  const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail } = useStore();
+  const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail, updateTaskFields, currentUser } = useStore();
   
   const dDate = task.dueDate ? new Date(task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T00:00`) : null;
   const now = new Date();
@@ -52,31 +52,49 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
 
   return (
     <div className={`${styles.taskItem} ${priorityClass} ${task.status === 'completed' ? 'opacity-50' : ''} transition-all hover:bg-[var(--bg-secondary)] px-4 group`}>
-      {/* Checkbox */}
-      <div 
-        className={`${styles.checkbox} ${task.status === 'completed' ? styles.checked : ''} mt-1`} 
-        onClick={handleCompleteToggle}
-        title={task.status === 'completed' ? "Mark as Incomplete" : "Mark as Completed"}
-      />
-      
       {/* Task Info Area */}
       <div 
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => openTaskDetail(task.id)}
       >
         <div className="flex items-center gap-2">
-          <span className={`${styles.statusBadge} ${s.class}`}>{s.label}</span>
-          <span className={`text-sm font-semibold tracking-tight text-[var(--text-main)] truncate ${
-            task.status === 'completed' ? 'line-through text-[var(--text-muted)] font-medium' : ''
-          }`}>
-            {task.title}
-          </span>
+          <select 
+            value={task.status} 
+            onChange={(e) => {
+              const val = e.target.value as any;
+              if (val === 'completed' && task.status !== 'completed') {
+                toggleTaskCompletion(task.id);
+              } else if (val !== 'completed' && task.status === 'completed') {
+                toggleTaskCompletion(task.id);
+              } else {
+                updateTaskStatus(task.id, val);
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className={`${styles.statusBadge} ${s.class} border-none outline-none cursor-pointer appearance-none text-center`}
+          >
+            <option value="pending">Pending</option>
+            <option value="in_progress">Doing</option>
+            <option value="review">Review</option>
+            <option value="completed">Done</option>
+          </select>
+          <textarea
+            value={task.title}
+            onChange={(e) => updateTaskFields(task.id, { title: e.target.value }, currentUser?.name || 'Unknown')}
+            onClick={(e) => e.stopPropagation()}
+            className={`${styles.titleTextarea} text-base font-bold tracking-tight text-[var(--text-main)] bg-transparent border-none outline-none resize-none overflow-hidden flex-1 ${
+              task.status === 'completed' ? 'line-through text-[var(--text-muted)] opacity-60' : ''
+            }`}
+            rows={1}
+            spellCheck={false}
+            wrap="off"
+          />
         </div>
         
         {/* Description (Todoist style) */}
         {task.desc && (
-          <p className={`text-xs text-[var(--text-muted)] mt-1 pr-6 leading-normal break-words ${
-            task.status === 'completed' ? 'line-through opacity-80' : ''
+          <p className={`text-sm text-[var(--text-muted)] mt-1.5 pr-6 leading-relaxed break-words ${
+            task.status === 'completed' ? 'line-through opacity-50' : ''
           }`}>
             {task.desc}
           </p>
@@ -134,18 +152,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
       </div>
 
       {/* Task Row Actions */}
-      <div className="flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <select 
-          value={task.status} 
-          onChange={(e) => updateTaskStatus(task.id, e.target.value as any)}
-          className="text-[10px] bg-[var(--bg-primary)] border border-[var(--border-color)] rounded px-1.5 py-0.5 outline-none font-medium cursor-pointer transition-colors hover:border-gray-400 text-[var(--text-main)]"
-        >
-          <option value="pending">Pending</option>
-          <option value="in_progress">Doing</option>
-          <option value="review">Review</option>
-          <option value="completed">Done</option>
-        </select>
-        
+      <div className="flex items-center gap-2.5 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <button 
           onClick={() => toggleMyDay(task.id)}
           className={`w-7 h-7 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center transition-all ${

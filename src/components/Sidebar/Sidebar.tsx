@@ -20,7 +20,9 @@ const Sidebar = () => {
     adminNotifications,
     dismissAdminNotification,
     clearAdminNotifications,
-    openTaskDetail
+    openTaskDetail,
+    isSidebarOpen,
+    closeSidebar
   } = useStore();
 
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
@@ -28,6 +30,13 @@ const Sidebar = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   if (!currentUser) return null;
+
+  // Close sidebar on navigation (mobile)
+  const handleNavClick = () => {
+    if (window.innerWidth <= 768) {
+      closeSidebar();
+    }
+  };
 
   // Calculate counts for badges
   const myDayCount = tasks.filter(t => 
@@ -57,92 +66,109 @@ const Sidebar = () => {
   const unreadNotifs = (adminNotifications || []).filter(n => !n.read);
 
   return (
-    <aside className={`${styles.sidebarContainer} bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] p-5 flex flex-col gap-5 h-full relative`}>
-      {/* Header Logo & Buttons */}
-      <div className="flex items-center justify-between px-3 mb-2 relative">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white shadow-md shadow-red-500/10">
-            <i className="fas fa-check-double text-sm"></i>
-          </div>
-          <span className="font-bold text-lg tracking-tight">Seva</span>
-        </div>
-        
-        <div className="flex items-center gap-1">
-          {/* Admin Alerts Bell */}
-          {currentUser.role === 'admin' && (
-            <div className="relative">
-              <button 
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className={`w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all relative active:scale-95 ${
-                  isNotifOpen ? 'bg-[var(--border-color)] text-[var(--accent)]' : ''
-                }`}
-                title="Admin Alerts"
-              >
-                <i className="fas fa-bell"></i>
-                {unreadNotifs.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-                )}
-                {unreadNotifs.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
-                )}
-              </button>
+    <>
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[998] md:hidden animate-in fade-in duration-300" 
+          onClick={closeSidebar}
+        />
+      )}
 
-              {/* Alerts Dropdown Overlay */}
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-2xl p-3 z-[999] min-w-[280px] max-h-[360px] overflow-y-auto flex flex-col gap-2">
-                  <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2 mb-1">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Notifications</span>
-                    {unreadNotifs.length > 0 && (
-                      <button 
-                        onClick={clearAdminNotifications}
-                        className="text-[9px] text-red-500 hover:text-red-600 font-bold"
-                      >
-                        Clear All
-                      </button>
+      <aside className={`${styles.sidebarContainer} ${isSidebarOpen ? styles.open : ''} bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] p-5 flex flex-col gap-5 h-full relative z-[999]`}>
+        {/* Header Logo & Buttons */}
+        <div className="flex items-center justify-between px-3 mb-2 relative">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white shadow-md shadow-red-500/10">
+              <i className="fas fa-check-double text-sm"></i>
+            </div>
+            <span className="font-bold text-lg tracking-tight">Seva</span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            {/* Admin Alerts Bell */}
+            {currentUser.role === 'admin' && (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className={`w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all relative active:scale-95 ${
+                    isNotifOpen ? 'bg-[var(--border-color)] text-[var(--accent)]' : ''
+                  }`}
+                  title="Admin Alerts"
+                >
+                  <i className="fas fa-bell"></i>
+                  {unreadNotifs.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                  )}
+                  {unreadNotifs.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                  )}
+                </button>
+
+                {/* Alerts Dropdown Overlay */}
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-2xl p-3 z-[999] min-w-[280px] max-h-[360px] overflow-y-auto flex flex-col gap-2">
+                    <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2 mb-1">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Admin Notifications</span>
+                      {unreadNotifs.length > 0 && (
+                        <button 
+                          onClick={clearAdminNotifications}
+                          className="text-[9px] text-red-500 hover:text-red-600 font-bold"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+                    
+                    {unreadNotifs.length > 0 ? (
+                      <div className="flex flex-col gap-1.5">
+                        {unreadNotifs.map(n => (
+                          <div 
+                            key={n.id} 
+                            className="flex flex-col p-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg hover:border-red-500/20 cursor-pointer transition-colors relative group/notif"
+                            onClick={() => { openTaskDetail(n.taskId); setIsNotifOpen(false); handleNavClick(); }}
+                          >
+                            <p className="text-[11px] text-[var(--text-main)] font-medium leading-relaxed pr-5">
+                              {n.text}
+                            </p>
+                            <span className="text-[8px] text-gray-400 mt-1">
+                              {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + new Date(n.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                            </span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); dismissAdminNotification(n.id); }}
+                              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-[10px] opacity-0 group-hover/notif:opacity-100 transition-opacity"
+                              title="Mark as read"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-xs text-gray-400 italic">No new admin alerts.</div>
                     )}
                   </div>
-                  
-                  {unreadNotifs.length > 0 ? (
-                    <div className="flex flex-col gap-1.5">
-                      {unreadNotifs.map(n => (
-                        <div 
-                          key={n.id} 
-                          className="flex flex-col p-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg hover:border-red-500/20 cursor-pointer transition-colors relative group/notif"
-                          onClick={() => { openTaskDetail(n.taskId); setIsNotifOpen(false); }}
-                        >
-                          <p className="text-[11px] text-[var(--text-main)] font-medium leading-relaxed pr-5">
-                            {n.text}
-                          </p>
-                          <span className="text-[8px] text-gray-400 mt-1">
-                            {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + new Date(n.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                          </span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); dismissAdminNotification(n.id); }}
-                            className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-[10px] opacity-0 group-hover/notif:opacity-100 transition-opacity"
-                            title="Mark as read"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-xs text-gray-400 italic">No new admin alerts.</div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          <button 
-            onClick={toggleTheme} 
-            className="w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all active:scale-95"
-            title="Toggle Theme"
-          >
-            <i className="fas fa-moon"></i>
-          </button>
+            <button 
+              onClick={toggleTheme} 
+              className="w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all active:scale-95"
+              title="Toggle Theme"
+            >
+              <i className="fas fa-moon"></i>
+            </button>
+
+            {/* Close Button (Mobile Only) */}
+            <button 
+              onClick={closeSidebar}
+              className="w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] md:hidden transition-all active:scale-95"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Switch Identity (Prototyping) */}
       <div className="px-3 mb-2">
@@ -169,6 +195,7 @@ const Sidebar = () => {
           <Link 
             key={item.path} 
             href={item.path}
+            onClick={handleNavClick}
             className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all group ${
               pathname === item.path 
                 ? 'bg-[var(--border-color)] text-[var(--text-main)] font-semibold' 
@@ -190,6 +217,7 @@ const Sidebar = () => {
         {currentUser.role === 'admin' && (
           <Link 
             href="/track"
+            onClick={handleNavClick}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               pathname === '/track' 
                 ? 'bg-[var(--border-color)] text-[var(--text-main)] font-semibold' 
@@ -222,6 +250,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={p} 
+                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">
@@ -259,6 +288,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={t} 
+                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">
@@ -286,7 +316,7 @@ const Sidebar = () => {
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-[var(--text-main)] truncate">{currentUser.name.split(' (')[0]}</span>
+              <span className="text-xs font-bold text-[var(--text-main)] ">{currentUser.name.split(' (')[0]}</span>
               <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-tighter ${
                 currentUser.role === 'admin' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300'
               }`}>
@@ -300,6 +330,7 @@ const Sidebar = () => {
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

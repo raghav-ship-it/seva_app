@@ -73,6 +73,28 @@
     text-transform: uppercase;
     margin-right: 4px;
     letter-spacing: 0.05em;
+    min-width: 60px;
+    transition: filter 0.2s;
+}
+
+.statusBadge:hover {
+    filter: brightness(0.9);
+}
+
+.titleTextarea {
+    display: block;
+    width: 100%;
+    margin-top: -2px;
+    line-height: 1.5;
+    padding: 2px 0;
+    height: 1.5rem;
+    white-space: nowrap;
+}
+
+.titleTextarea:focus {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+    padding-left: 4px;
 }
 
 .statusPending { background: #e2e8f0; color: #475569; }
