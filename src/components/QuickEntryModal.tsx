@@ -63,7 +63,6 @@ export default function QuickEntryModal({
         setActivePopover={controller.setActivePopover}
         setStagedMeta={controller.setStagedMeta}
         removeTag={controller.removeTag}
-        trackUsedToken={controller.trackUsedToken}
       />
 
       <QuickEntryFooter

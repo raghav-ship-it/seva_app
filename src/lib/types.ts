@@ -22,6 +22,7 @@ export interface TaskLog {
 export interface TaskAttachment {
   name: string;
   size: string;
+  id: string;
 }
 
 export interface TaskComment {

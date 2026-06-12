@@ -2,27 +2,18 @@
 
 import React from 'react';
 import { getLocalDateStr } from '@/lib/date';
-import type { Priority, Recurrence } from '@/lib/types';
+import type { Priority } from '@/lib/types';
+import { PopoverType, MetaState } from '../types';
 import styles from './QuickEntryMetaRow.module.css';
 
 export interface QuickEntryMetaRowProps {
-  stagedMeta: {
-    assigneeId: string | null;
-    projectId: string | null;
-    tags: string[];
-    priority: Priority|null;
-    dueDate: string | null;
-    dueTime: string | null;
-    reminder: string | null;
-    recurrence: Recurrence;
-  };
+  stagedMeta: MetaState;
   users: Array<{ id: string; name: string }>;
   projects: string[];
-  activePopover: any;
-  setActivePopover: (v: any) => void;
-  setStagedMeta: (updater: any) => void;
+  activePopover: PopoverType;
+  setActivePopover: (v: PopoverType) => void;
+  setStagedMeta: (updater: (prev: MetaState) => MetaState) => void;
   removeTag: (tag: string) => void;
-  trackUsedToken: (type: 'assignees' | 'tags' | 'projects', value: string) => void;
 }
 
 export default function QuickEntryMetaRow({
@@ -32,7 +23,6 @@ export default function QuickEntryMetaRow({
   setActivePopover,
   setStagedMeta,
   removeTag,
-  trackUsedToken,
 }: QuickEntryMetaRowProps) {
   return (
     <div>
@@ -79,7 +69,7 @@ export default function QuickEntryMetaRow({
                 <button
                   key={u.id}
                   onClick={() => {
-                    setStagedMeta((s: any) => ({ ...s, assigneeId: u.id }));
+                    setStagedMeta((s: MetaState) => ({ ...s, assigneeId: u.id }));
                     setActivePopover(null);
                   }}
                   className={styles.popoverItem}
@@ -111,7 +101,7 @@ export default function QuickEntryMetaRow({
                 <button
                   key={p}
                   onClick={() => {
-                    setStagedMeta((s: any) => ({ ...s, priority: p }));
+                    setStagedMeta((s: MetaState) => ({ ...s, priority: p }));
                     setActivePopover(null);
                   }}
                   className={styles.popoverItem}
@@ -150,7 +140,7 @@ export default function QuickEntryMetaRow({
                 <button
                   key={rec.label}
                   onClick={() => {
-                    setStagedMeta((s: any) => ({ ...s, recurrence: rec.val as any }));
+                    setStagedMeta((s: MetaState) => ({ ...s, recurrence: rec.val as any }));
                     setActivePopover(null);
                   }}
                   className={styles.popoverItem}

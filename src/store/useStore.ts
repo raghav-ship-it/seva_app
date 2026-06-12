@@ -62,6 +62,7 @@ export const useStore = create<AppStore>()(
       modalDraft: null,
       adminNotifications: [],
       activeDetailTaskId: null,
+      isSidebarOpen: false,
       
       // Global Modal State
       isQuickEntryOpen: false,

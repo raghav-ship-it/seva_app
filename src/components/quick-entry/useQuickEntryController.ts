@@ -10,6 +10,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { useStore } from '@/store/useStore';
 import { Priority, Recurrence } from '@/lib/types';
 import { getLocalDateStr, parseNaturalTime } from '@/lib/date';
+import { MetaState, Menu, PopoverType } from './types';
 
 export const WISDOM_QUOTES: Record<string, { quote: string; source: string }> = {
   work: {
@@ -45,23 +46,14 @@ export function useQuickEntryController({
 }: UseQuickEntryControllerProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const datePickerRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
 
   const [isClosing, setIsClosing] = useState(false);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
-  const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [activePopover, setActivePopover] = useState<PopoverType>(null);
 
-  const [stagedMeta, setStagedMeta] = useState<{
-    assigneeId: string | null;
-    projectId: string | null;
-    tags: string[];
-    priority: Priority | null;
-    dueDate: string | null;
-    dueTime: string | null;
-    reminder: string | null;
-    recurrence: Recurrence;
-  }>({
+  const [stagedMeta, setStagedMeta] = useState<MetaState>({
     assigneeId: null,
     projectId: defaultProject,
     tags: [],
@@ -72,12 +64,7 @@ export function useQuickEntryController({
     recurrence: null,
   });
 
-  const [menu, setMenu] = useState<{
-    items: any[];
-    type: string;
-    index: number;
-    startPos: number;
-  } | null>(null);
+  const [menu, setMenu] = useState<Menu | null>(null);
 
   const isDraftLoadingRef = useRef(false);
 

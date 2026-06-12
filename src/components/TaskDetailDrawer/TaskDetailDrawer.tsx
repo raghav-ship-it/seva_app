@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getLocalIsoDateTime } from '@/lib/date';
 import { useStore } from '@/store/useStore';
-import { Priority, Recurrence, TaskAttachment } from '@/lib/types';
+import { Priority, Recurrence, TaskAttachment, Task, TaskLog, TaskComment } from '@/lib/types';
 import styles from './TaskDetailDrawer.module.css';
 
 
@@ -50,7 +50,7 @@ const TaskDetailDrawer = () => {
     if (task) {
       timelineEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [task?.logs, task?.comments]);
+  }, [task, task?.logs, task?.comments]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -65,15 +65,17 @@ const TaskDetailDrawer = () => {
 
   if (!task || !currentUser) return null;
 
+  type Selectable = 'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm';
+  type Token = { name: string; icon: string; type: Selectable };
+
   // Determine unimplemented tokens for the carousel
-  const emptyTokens: Array<{ name: string; icon: string; type: string }> = [];
-  if (!task.dueDate) emptyTokens.push({ name: 'Due Date', icon: 'calendar', type: 'dueDate' });
-  if (!task.assigneeId) emptyTokens.push({ name: 'Assignee', icon: 'user', type: 'assigneeId' });
+  const emptyTokens: Token[] = [];
+  if (!task.assigneeId) emptyTokens.push({ name: 'Assignee', icon: 'user', type: 'assignee' });
   if (!task.project) emptyTokens.push({ name: 'Project', icon: 'folder', type: 'project' });
   if (task.tags.length === 0) emptyTokens.push({ name: 'Tags', icon: 'tag', type: 'tags' });
   if (!task.priority) emptyTokens.push({ name: 'Priority', icon: 'flag', type: 'priority' });
 
-  const handleUpdate = (fields: Partial<typeof task>) => {
+  const handleUpdate = (fields: Partial<Task>) => {
     updateTaskFields(task.id, fields, currentUser.name);
   };
 
@@ -106,11 +108,14 @@ const TaskDetailDrawer = () => {
     setStagedAttachments(stagedAttachments.filter(a => a.id !== id));
   };
 
+  type ActivityFeedItem = (TaskLog & { type: 'log' }) | (TaskComment & { type: 'comment' });
+
   // Activity Feed Combine (logs + comments)
-  const activityFeed = [
-    ...(task.logs || []).map(l => ({ ...l, type: 'log' })),
-    ...(task.comments || []).map(c => ({ ...c, type: 'comment' }))
-  ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const activityFeed: ActivityFeedItem[] = [
+    ...(task.logs || []).map(l => ({ ...l, type: 'log' as const })),
+    ...(task.comments || []).map(c => ({ ...c, type: 'comment' as const }))
+  ] as ActivityFeedItem[];
+  activityFeed.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   // Gita Logic: Choose a quote based on project or description
   
@@ -156,7 +161,7 @@ const TaskDetailDrawer = () => {
                   {emptyTokens.map(tok => (
                     <button 
                       key={tok.type}
-                      onClick={() => setActiveSelect(tok.type as any)}
+                      onClick={() => setActiveSelect(tok.type)}
                       className="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-lg text-[10px] font-bold hover:bg-orange-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <i className={`fas fa-${tok.icon} text-[8px]`}></i>
@@ -385,34 +390,36 @@ const TaskDetailDrawer = () => {
               </div>
 
               <div className="flex flex-col">
-                {activityFeed.map((item: any, index) => {
-                  if (item.type === 'log') {
+                {activityFeed.map((item, index) => {
+                  const typedItem = item as any;
+                  if (typedItem.type === 'log') {
                     return (
-                      <div key={item.id || index} className={`${styles.timelineItemSystem} text-xs py-1 mb-2 ml-4`}>
-                        <span className="text-gray-400 font-medium mr-1.5">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="text-[var(--text-muted)]">{item.text}</span>
+                      <div key={typedItem.id || index} className={`${styles.timelineItemSystem} text-xs py-1 mb-2 ml-4`}>
+                        <span className="text-gray-400 font-medium mr-1.5">{new Date(typedItem.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-[var(--text-muted)]">{typedItem.text}</span>
                       </div>
                     );
                   } else {
-                    const author = users.find(u => u.id === item.authorId);
-                    const isMe = item.authorId === currentUser?.id;
+                    const comment = typedItem;
+                    const author = users.find(u => u.name === comment.author);
+                    const isMe = author?.id === currentUser?.id;
                     return (
-                      <div key={item.id || index} className={`${styles.commentRow} ${isMe ? styles.commentRowMe : ''}`}>
+                      <div key={comment.id || index} className={`${styles.commentRow} ${isMe ? styles.commentRowMe : ''}`}>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 border mt-1 ${isMe ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
                           {author?.name.charAt(0)}
                         </div>
                         <div className={`${styles.commentBubble} ${isMe ? styles.commentBubbleRight : styles.commentBubbleLeft}`}>
                           <div className={`${styles.commentMeta} ${isMe ? styles.commentMetaMe : ''}`}>
                             <span className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-wider">{author?.name.split(' (')[0]}</span>
-                            <span className="text-[9px] text-gray-400 font-bold">{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span className="text-[9px] text-gray-400 font-bold">{new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <p className={`text-sm text-[var(--text-main)] mt-0.5 whitespace-pre-wrap leading-relaxed ${isMe ? 'text-right' : 'text-left'}`}>{item.text}</p>
+                          <p className={`text-sm text-[var(--text-main)] mt-0.5 whitespace-pre-wrap leading-relaxed ${isMe ? 'text-right' : 'text-left'}`}>{comment.text}</p>
                           
-                          {item.attachments && item.attachments.length > 0 && (
+                          {comment.attachments && comment.attachments.length > 0 && (
                             <div className={`flex flex-wrap gap-2 mt-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                              {item.attachments.map((a: any) => (
-                                <div key={a.id} className="p-2 rounded-lg bg-white/50 border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
-                                  <i className={`fas ${a.type === 'image' ? 'fa-image text-blue-500' : 'fa-file-alt text-gray-500'} text-[10px]`}></i>
+                              {comment.attachments.map((a: TaskAttachment) => (
+                                <div key={a.name} className="p-2 rounded-lg bg-white/50 border border-[var(--border-color)] flex items-center gap-2 group cursor-pointer hover:border-orange-500/30 transition-all">
+                                  <i className={`fas ${a.size.includes('KB') ? 'fa-file-alt' : 'fa-image'} text-blue-500 text-[10px]`}></i>
                                   <span className="text-[9px] font-bold text-[var(--text-main)] max-w-[80px] truncate">{a.name}</span>
                                 </div>
                               ))}
@@ -486,3 +493,4 @@ const TaskDetailDrawer = () => {
 };
 
 export default TaskDetailDrawer;
+

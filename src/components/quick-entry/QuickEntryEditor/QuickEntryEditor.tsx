@@ -2,60 +2,37 @@
 
 import React from 'react';
 import type { Editor } from '@tiptap/react';
+import { PopoverType, MetaState, Menu, MenuItem } from '../types';
 
 import styles from './QuickEntryEditor.module.css';
 
-export interface QuickEntryEditorProps { // props for the editor to understand and render the content, as well as manage the state of the meta popovers and menu
+export interface QuickEntryEditorProps {
   editor: Editor | null;
-  EditorContent: React.ComponentType<any>;
-
+  EditorContent: React.ComponentType<{ editor: Editor | null }>;
 
   title: string;
   desc: string;
   setDesc: (v: string) => void;
 
-  stagedMeta: {
-    assigneeId: string | null;
-    projectId: string | null;
-    tags: string[];
-    priority: 'p1' | 'p2' | 'p3' | 'p4'|null;
-    dueDate: string | null;
-    dueTime: string | null;
-    reminder: string | null;
-    recurrence: 'daily' | 'weekly' | 'monthly' | null;
-  };
+  stagedMeta: MetaState;
 
   users: Array<{ id: string; name: string }>;
   tags: string[];
   projects: string[];
-  menu:
-    | {
-        items: Array<any>;
-        type: string;
-        index: number;
-      }
-    | null;
+  menu: Menu | null;
 
-  activePopover:
-    | 'schedule'
-    | 'assignee'
-    | 'priority'
-    | 'tags'
-    | 'project'
-    | 'reminder'
-    | 'recurrence'
-    | null;
+  activePopover: PopoverType;
 
-  setActivePopover: (v: any) => void;
-  setMenu: (v: any) => void;
+  setActivePopover: (v: PopoverType) => void;
+  setMenu: (v: Menu | null) => void;
 
-  applyToken: (type: string, val: any) => void;
+  applyToken: (type: string, val: string | number) => void;
   processTextContent: (val: string) => void;
   removeTag: (tag: string) => void;
 
   popoverRef: React.RefObject<HTMLDivElement | null>;
   datePickerRef: React.RefObject<HTMLInputElement | null>;
-  setStagedMeta: (updater: any) => void;
+  setStagedMeta: (updater: (prev: MetaState) => MetaState) => void;
 }
 
 export default function QuickEntryEditor({
@@ -84,7 +61,7 @@ export default function QuickEntryEditor({
 
         {menu && (
           <div className={styles.menu}>
-            {menu.items.map((it: any, i: number) => (
+            {menu.items.map((it: MenuItem, i: number) => (
               <div
                 key={i}
                 className={`${styles.menuItem} ${
@@ -115,7 +92,7 @@ export default function QuickEntryEditor({
         type="date"
         className={styles.datePicker}
         onChange={(e) => {
-          setStagedMeta((s: any) => ({ ...s, dueDate: e.target.value, dueTime: null }));
+          setStagedMeta((s: MetaState) => ({ ...s, dueDate: e.target.value, dueTime: null }));
           editor?.commands.focus('end');
         }}
       />

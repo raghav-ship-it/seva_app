@@ -1,16 +1,13 @@
 'use client' ;
 
 import React from 'react';
+import { PopoverType, MetaState } from '../types';
 
 export interface QuickEntryFooterProps {
-  activePopover: any;
-  setActivePopover: (v: any) => void;
-  stagedMeta: {
-    projectId: string | null;
-    tags: string[];
-    dueDate: string | null;
-  };
-  setStagedMeta: (updater: any) => void;
+  activePopover: PopoverType;
+  setActivePopover: (v: PopoverType) => void;
+  stagedMeta: MetaState;
+  setStagedMeta: (updater: (prev: MetaState) => MetaState) => void;
   projects: string[];
   trackUsedToken: (type: 'assignees' | 'tags' | 'projects', value: string) => void;
   title: string;
@@ -53,7 +50,7 @@ export default function QuickEntryFooter({
           <div className="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] p-1 flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
             <button
               onClick={() => {
-                setStagedMeta((s: any) => ({ ...s, projectId: null }));
+                setStagedMeta((s: MetaState) => ({ ...s, projectId: null }));
                 setActivePopover(null);
               }}
               className={`text-left px-2.5 py-1.5 text-xs font-semibold hover:bg-gray-50 rounded flex items-center justify-between text-gray-500 ${
@@ -66,7 +63,7 @@ export default function QuickEntryFooter({
               <button
                 key={p}
                 onClick={() => {
-                  setStagedMeta((s: any) => ({ ...s, projectId: p }));
+                  setStagedMeta((s: MetaState) => ({ ...s, projectId: p }));
                   trackUsedToken('projects', p);
                   setActivePopover(null);
                 }}
