@@ -313,7 +313,13 @@ export function useQuickEntryController({
 
   useEffect(() => {
     if (activePopover === 'schedule' && datePickerRef.current) {
-      (datePickerRef.current as any).showPicker?.();
+      // Check if showPicker exists
+      if (typeof datePickerRef.current.showPicker === 'function') {
+        datePickerRef.current.showPicker();
+      } else {
+        // Fallback for browsers that don't support showPicker()
+        datePickerRef.current.focus();
+      }
       setActivePopover(null);
     }
   }, [activePopover]);
