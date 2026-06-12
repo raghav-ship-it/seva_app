@@ -40,7 +40,7 @@ export default function QuickEntryMetaRow({
             <i className="far fa-calendar text-[10px]"></i>
             <span>
               {stagedMeta.dueDate
-                ? getLocalDateStr(new Date(stagedMeta.dueDate).getTime())
+                ? stagedMeta.dueDate
                 : 'Schedule'}
             </span>
           </button>
