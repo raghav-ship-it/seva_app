@@ -139,7 +139,7 @@ export function useQuickEntryController({
         .filter((t: string) => t.toLowerCase().includes(query))
         .map((t: string) => ({ icon: 'tag', label: `#${t}`, val: t, type: 'tag' }));
       
-      if (tags.some(t => t.toLowerCase() === query)) setStagedMeta(s => ({ ...s, tags: s.tags.includes(query) ? s.tags : [...s.tags, query] }));
+      if (tags.some((t: string) => t.toLowerCase() === query)) setStagedMeta(s => ({ ...s, tags: s.tags.includes(query) ? s.tags : [...s.tags, query] }));
 
       if (filtered.length) {
         setMenu({ items: filtered, type: 'tag', index: 0, startPos: text.length - lastWord.length });
@@ -168,7 +168,7 @@ export function useQuickEntryController({
         .filter((p: string) => p.toLowerCase().includes(query))
         .map((p: string) => ({ icon: 'folder', label: p, val: p, type: 'project' }));
       
-      if (projects.some(p => p.toLowerCase() === query)) setStagedMeta(s => ({ ...s, projectId: projects.find(p => p.toLowerCase() === query) }));
+      if (projects.some((p: string) => p.toLowerCase() === query)) setStagedMeta(s => ({ ...s, projectId: projects.find((p: string) => p.toLowerCase() === query) || null }));
 
       if (filtered.length) {
         setMenu({ items: filtered, type: 'project', index: 0, startPos: text.length - lastWord.length });
@@ -198,7 +198,7 @@ export function useQuickEntryController({
         .filter(r => r.includes(query))
         .map(r => ({ icon: 'redo', label: r.charAt(0).toUpperCase() + r.slice(1), val: r, type: 'recurrence' }));
       
-      if (recurrences.includes(query)) setStagedMeta(s => ({ ...s, recurrence: query }));
+      if (recurrences.includes(query)) setStagedMeta(s => ({ ...s, recurrence: query as Recurrence }));
 
       if (filtered.length) {
         setMenu({ items: filtered, type: 'recurrence', index: 0, startPos: text.length - lastWord.length });
@@ -280,13 +280,13 @@ export function useQuickEntryController({
 
                 // Validate based on token type
                 if (type === '@') {
-                  isValid = users.some(u => u.name.toLowerCase().includes(value));
+                  isValid = users.some((u: any) => u.name.toLowerCase().includes(value));
                 } else if (type === '#') {
-                  isValid = tags.some(t => t.toLowerCase() === value);
+                  isValid = tags.some((t: string) => t.toLowerCase() === value);
                 } else if (type === '!') {
                   isValid = ['p1', 'p2', 'p3', 'p4'].includes(value);
                 } else if (type === '^') {
-                  isValid = projects.some(p => p.toLowerCase() === value);
+                  isValid = projects.some((p: string) => p.toLowerCase() === value);
                 } else if (type === '+') {
                   isValid = ['0', '5', '10', '15', '30', '60'].includes(value);
                 } else if (type === '*') {

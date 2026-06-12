@@ -54,7 +54,7 @@ export interface QuickEntryEditorProps { // props for the editor to understand a
   removeTag: (tag: string) => void;
 
   popoverRef: React.RefObject<HTMLDivElement | null>;
-  datePickerRef: React.RefObject<HTMLDivElement | null>;
+  datePickerRef: React.RefObject<HTMLInputElement | null>;
   setStagedMeta: (updater: any) => void;
 }
 

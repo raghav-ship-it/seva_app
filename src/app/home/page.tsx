@@ -46,7 +46,6 @@ function SunLottie({ className, size = 240 }: { className?: string; size?: numbe
 export default function HomePage() {
   const { tasks, currentUser, clearMyDay } = useStore();
   
-  const now = new Date();
   const todayStr = getLocalDateStr();
 
   const myDayTasks = tasks.filter(t => 

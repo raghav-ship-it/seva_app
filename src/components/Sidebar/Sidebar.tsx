@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/store/useStore';
@@ -28,6 +28,17 @@ const Sidebar = () => {
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
   const [tagsCollapsed, setTagsCollapsed] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!currentUser) return null;
 
@@ -88,7 +99,7 @@ const Sidebar = () => {
           <div className="flex items-center gap-1">
             {/* Admin Alerts Bell */}
             {currentUser.role === 'admin' && (
-              <div className="relative">
+              <div className="relative" ref={notifRef}>
                 <button 
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
                   className={`w-8 h-8 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all relative active:scale-95 ${

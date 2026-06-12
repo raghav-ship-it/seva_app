@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import TaskItem from '@/components/TaskItem/TaskItem';
 import FAB from '@/components/FAB/FAB';
@@ -10,10 +10,17 @@ import { doesTaskOccurOnDate } from '@/lib/recurrence';
 export default function UpcomingPage() {
   const { tasks, currentUser, openQuickEntry } = useStore();
   
+  const { todayLabel, tomorrowLabel } = useMemo(() => {
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 86400000);
+    return {
+      todayLabel: today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + " • Today",
+      tomorrowLabel: tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + " • Tomorrow"
+    };
+  }, []);
+
   if (!currentUser) return null;
 
-  const now = new Date();
-  
   // Format reference dates relative to user local time
   const getLocalDateStr = (offset = 0) => {
     const d = new Date();
@@ -136,9 +143,6 @@ export default function UpcomingPage() {
       </section>
     );
   };
-
-  const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + " • Today";
-  const tomorrowLabel = new Date(Date.now() + 86400000).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + " • Tomorrow";
 
   return (
     <div className="p-10 max-w-4xl mx-auto min-h-screen pb-32">

@@ -34,6 +34,8 @@ interface AppStore extends AppState {
   closeTaskDetail: () => void;
   dismissAdminNotification: (id: string) => void;
   clearAdminNotifications: () => void;
+  toggleSidebar: () => void;
+  closeSidebar: () => void;
 }
 
 const INITIAL_USERS: User[] = [
@@ -80,6 +82,21 @@ export const useStore = create<AppStore>()(
           comments: []
         };
         set((state) => ({ tasks: [newTask, ...state.tasks] }));
+
+        // Admin Notification
+        const currentUser = get().currentUser;
+        if (currentUser && currentUser.role !== 'admin') {
+          const newNotif: AdminNotification = {
+            id: 'notif_' + Date.now() + Math.random(),
+            text: `${currentUser.name} created a new task: "${newTask.title}"`,
+            timestamp: new Date().toISOString(),
+            taskId: newTask.id,
+            read: false
+          };
+          set((state) => ({
+            adminNotifications: [newNotif, ...(state.adminNotifications || [])]
+          }));
+        }
       },
 
       updateTaskStatus: (id, status) => {
@@ -217,10 +234,26 @@ export const useStore = create<AppStore>()(
       },
 
       deleteTask: (id) => {
+        const oldTask = get().tasks.find(t => t.id === id);
         set((state) => ({
           tasks: state.tasks.filter(t => t.id !== id),
           activeDetailTaskId: state.activeDetailTaskId === id ? null : state.activeDetailTaskId
         }));
+
+        // Admin Notification
+        const currentUser = get().currentUser;
+        if (currentUser && currentUser.role !== 'admin' && oldTask) {
+          const newNotif: AdminNotification = {
+            id: 'notif_' + Date.now() + Math.random(),
+            text: `${currentUser.name} deleted task: "${oldTask.title}"`,
+            timestamp: new Date().toISOString(),
+            taskId: id,
+            read: false
+          };
+          set((state) => ({
+            adminNotifications: [newNotif, ...(state.adminNotifications || [])]
+          }));
+        }
       },
 
       clearMyDay: () => {
@@ -316,40 +349,35 @@ export const useStore = create<AppStore>()(
 
           if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
             let desc = '';
-            if (k === 'dueDate') {
-              desc = `changed due date from "${oldVal ? new Date(oldVal as string).toLocaleDateString() : 'No date'}" to "${newVal ? new Date(newVal as string).toLocaleDateString() : 'No date'}"`;
-            } else if (k === 'assigneeId') {
-              const oldUser = get().users.find(u => u.id === oldVal)?.name.split(' (')[0] || 'Unassigned';
-              const newUser = get().users.find(u => u.id === newVal)?.name.split(' (')[0] || 'Unassigned';
-              desc = `changed assignee from "${oldUser}" to "${newUser}"`;
-            } else if (k === 'project') {
-              desc = `changed project from "${oldVal || 'None'}" to "${newVal || 'None'}"`;
-            } else if (k === 'priority') {
-              desc = `changed priority from "${(oldVal as string || 'p4').toUpperCase()}" to "${(newVal as string || 'p4').toUpperCase()}"`;
-            } else if (k === 'recurrence') {
-              desc = `changed recurrence from "${oldVal || 'None'}" to "${newVal || 'None'}"`;
-            } else if (k === 'reminder') {
-              desc = `changed reminder from "${oldVal ? oldVal + 'm' : 'None'}" to "${newVal ? newVal + 'm' : 'None'}"`;
-            } else if (k === 'tags') {
-              const oldT = (oldVal as string[] || []).join(', ') || 'None';
-              const newT = (newVal as string[] || []).join(', ') || 'None';
-              desc = `updated tags from [${oldT}] to [${newT}]`;
-            } else if (k === 'title') {
-              desc = `updated task title to "${newVal}"`;
-            } else if (k === 'desc') {
-              desc = `updated description`;
-            } else {
-              desc = `updated ${k}`;
-            }
+            // Only log significant changes
+            if (['dueDate', 'assigneeId', 'project', 'priority', 'recurrence', 'title'].includes(k)) {
+              if (k === 'dueDate') {
+                desc = `changed due date from "${oldVal ? new Date(oldVal as string).toLocaleDateString() : 'No date'}" to "${newVal ? new Date(newVal as string).toLocaleDateString() : 'No date'}"`;
+              } else if (k === 'assigneeId') {
+                const oldUser = get().users.find(u => u.id === oldVal)?.name.split(' (')[0] || 'Unassigned';
+                const newUser = get().users.find(u => u.id === newVal)?.name.split(' (')[0] || 'Unassigned';
+                desc = `changed assignee from "${oldUser}" to "${newUser}"`;
+              } else if (k === 'project') {
+                desc = `changed project from "${oldVal || 'None'}" to "${newVal || 'None'}"`;
+              } else if (k === 'priority') {
+                desc = `changed priority from "${(oldVal as string || 'p4').toUpperCase()}" to "${(newVal as string || 'p4').toUpperCase()}"`;
+              } else if (k === 'recurrence') {
+                desc = `changed recurrence from "${oldVal || 'None'}" to "${newVal || 'None'}"`;
+              } else if (k === 'title') {
+                desc = `updated task title to "${newVal}"`;
+              }
 
-            logsToAdd.push({
-              id: 'log_' + Date.now() + Math.random(),
-              text: desc,
-              timestamp: new Date().toISOString(),
-              type: 'system',
-              user: changerName
-            });
-            changeDescriptions.push(desc);
+              if (desc) {
+                logsToAdd.push({
+                  id: 'log_' + Date.now() + Math.random(),
+                  text: desc,
+                  timestamp: new Date().toISOString(),
+                  type: 'system',
+                  user: changerName
+                });
+                changeDescriptions.push(desc);
+              }
+            }
           }
         });
 

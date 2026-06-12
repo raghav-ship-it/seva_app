@@ -34,7 +34,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
         {children}
       </div>
 
-      {isTaskDetailOpen && <TaskDetailDrawer />}
+      {isTaskDetailOpen && <TaskDetailDrawer key={activeDetailTaskId} />}
       {isQuickEntryOpen && (
         <QuickEntryModal 
           isOpen={isQuickEntryOpen} 

@@ -18,32 +18,32 @@ const TaskDetailDrawer = () => {
     tags,
     updateTaskFields, 
     addTaskComment,
-    addTag,
-    addProject
   } = useStore();
 
   const task = tasks.find(t => t.id === activeDetailTaskId);
   
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
+  const [title, setTitle] = useState(task?.title || '');
+  const [desc, setDesc] = useState(task?.desc || '');
   const [commentText, setCommentText] = useState('');
   const [stagedAttachments, setStagedAttachments] = useState<TaskAttachment[]>([]);
-  const [activeSelect, setActiveSelect] = useState<'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | null>(null);
+  const [activeSelect, setActiveSelect] = useState<'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm' | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timelineEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
 
-  // Load task data when task changes
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDesc(task.desc);
-      setCommentText('');
-      setStagedAttachments([]);
-      setActiveSelect(null);
+  // Swipe-to-close logic
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    if (touchEndY - touchStartY.current > 100) {
+      closeTaskDetail();
     }
-  }, [task]);
+  };
 
   // Scroll to bottom of timeline when logs/comments change
   useEffect(() => {
@@ -122,6 +122,8 @@ const TaskDetailDrawer = () => {
       <div 
         className={`relative ${styles.drawerContainer} ${styles.drawerSlideUp}`}
         onClick={e => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Header Drag Handle */}
         <div className={styles.handle} />
@@ -306,6 +308,30 @@ const TaskDetailDrawer = () => {
                   )}
                 </div>
 
+                {/* Alarm Select */}
+                <div className="relative" ref={activeSelect === 'alarm' ? dropdownRef : null}>
+                  <button 
+                    onClick={() => setActiveSelect(activeSelect === 'alarm' ? null : 'alarm')}
+                    className={`${styles.tagPill} text-gray-500 hover:bg-gray-50`}
+                  >
+                    <i className="fas fa-bell text-[10px]"></i>
+                    Alarm
+                  </button>
+                  {activeSelect === 'alarm' && (
+                    <div className={styles.dropdown}>
+                      <button 
+                        onClick={() => { 
+                          // Placeholder for alarm scheduling logic
+                          setActiveSelect(null);
+                        }}
+                        className="px-3 py-2 rounded-lg text-xs text-left hover:bg-[var(--border-color)]"
+                      >
+                        Set Reminder
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Tags Select */}
                 <div className="relative" ref={activeSelect === 'tags' ? dropdownRef : null}>
                   <button 
@@ -372,7 +398,7 @@ const TaskDetailDrawer = () => {
                     const isMe = item.authorId === currentUser?.id;
                     return (
                       <div key={item.id || index} className={`${styles.commentRow} ${isMe ? styles.commentRowMe : ''}`}>
-                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[10px] font-black text-orange-600 flex-shrink-0 border border-orange-200 mt-1">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 border mt-1 ${isMe ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
                           {author?.name.charAt(0)}
                         </div>
                         <div className={`${styles.commentBubble} ${isMe ? styles.commentBubbleRight : styles.commentBubbleLeft}`}>

@@ -89,4 +89,5 @@ export interface AppState {
   } | null;
   adminNotifications: AdminNotification[];
   activeDetailTaskId: number | null;
+  isSidebarOpen: boolean;
 }

@@ -4,7 +4,6 @@ import React from 'react';
 import { Task } from '@/lib/types';
 import { getLocalDateStr, isTimeOverdueToday, formatTimeStr } from '@/lib/date';
 import { useStore } from '@/store/useStore';
-import confetti from 'canvas-confetti';
 import styles from './TaskItem.module.css';
 
 interface TaskItemProps {
@@ -35,19 +34,6 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
   
   const s = statusMap[task.status] || statusMap.pending;
 
-  const handleCompleteToggle = () => {
-    if (task.status !== 'completed') {
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.85, x: 0.5 },
-        colors: ['#de4c4a', '#eb8909', '#246fe0', '#0e8a16', '#a855f7'],
-        disableForReducedMotion: true
-      });
-    }
-    toggleTaskCompletion(task.id);
-  };
-
   const priorityClass = task.priority ? styles[`priority${task.priority.toUpperCase()}`] : '';
 
   return (
@@ -61,7 +47,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
           <select 
             value={task.status} 
             onChange={(e) => {
-              const val = e.target.value as any;
+              const val = e.target.value as Task['status'];
               if (val === 'completed' && task.status !== 'completed') {
                 toggleTaskCompletion(task.id);
               } else if (val !== 'completed' && task.status === 'completed') {

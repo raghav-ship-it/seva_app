@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/store/useStore';
@@ -48,7 +47,7 @@ const BottomNav = () => {
     });
   }
 
-  tabs.push({ name: 'Profile', path: '/profile', icon: 'fa-user-circle' });
+  tabs.push({ name: 'Profile', path: '/profile', icon: 'fa-user-circle',count : 0 });
 
   return (
     <nav className={styles.bottomNav}>

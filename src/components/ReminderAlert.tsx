@@ -8,6 +8,15 @@ const ReminderAlert = () => {
   const { tasks, currentUser, dismissNotification } = useStore();
   const [activeNotification, setActiveNotification] = useState<Task | null>(null);
 
+  const triggerAlert = (task: Task) => {
+    setActiveNotification(task);
+    try {
+      new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+    } catch (e) {
+      console.warn("Audio play failed", e);
+    }
+  };
+
   useEffect(() => {
     const checkReminders = () => {
       if (!currentUser) return;
@@ -28,15 +37,6 @@ const ReminderAlert = () => {
     const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
   }, [tasks, currentUser]);
-
-  const triggerAlert = (task: Task) => {
-    setActiveNotification(task);
-    try {
-      new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
-    } catch (e) {
-      console.warn("Audio play failed", e);
-    }
-  };
 
   const handleDismiss = () => {
     if (activeNotification) {

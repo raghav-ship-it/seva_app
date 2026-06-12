@@ -19,7 +19,9 @@ export default function QuickEntryShell({
   children,
 }: QuickEntryShellProps) {
   const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
       // 2. Clear out the inline pinning styles to let it animate to the center layout
 
