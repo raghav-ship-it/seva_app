@@ -10,7 +10,6 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { useStore } from '@/store/useStore';
 import { Priority, Recurrence } from '@/lib/types';
 import { getLocalDateStr, parseNaturalTime } from '@/lib/date';
-import { MetaState, Menu, PopoverType } from './types';
 
 export const WISDOM_QUOTES: Record<string, { quote: string; source: string }> = {
   work: {
@@ -46,14 +45,23 @@ export function useQuickEntryController({
 }: UseQuickEntryControllerProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const datePickerRef = useRef<HTMLInputElement>(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
   const [isClosing, setIsClosing] = useState(false);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
-  const [activePopover, setActivePopover] = useState<PopoverType>(null);
+  const [activePopover, setActivePopover] = useState<string | null>(null);
 
-  const [stagedMeta, setStagedMeta] = useState<MetaState>({
+  const [stagedMeta, setStagedMeta] = useState<{
+    assigneeId: string | null;
+    projectId: string | null;
+    tags: string[];
+    priority: Priority | null;
+    dueDate: string | null;
+    dueTime: string | null;
+    reminder: string | null;
+    recurrence: Recurrence;
+  }>({
     assigneeId: null,
     projectId: defaultProject,
     tags: [],
@@ -64,7 +72,12 @@ export function useQuickEntryController({
     recurrence: null,
   });
 
-  const [menu, setMenu] = useState<Menu | null>(null);
+  const [menu, setMenu] = useState<{
+    items: any[];
+    type: string;
+    index: number;
+    startPos: number;
+  } | null>(null);
 
   const isDraftLoadingRef = useRef(false);
 
@@ -138,8 +151,8 @@ export function useQuickEntryController({
       const query = lastWord.slice(1).toLowerCase();
       const priorities = ['p1', 'p2', 'p3', 'p4'] as Priority[];
       const filtered = priorities
-        .filter(p => p.includes(query))
-        .map(p => ({ icon: 'flag', label: p.toUpperCase(), val: p, type: 'priority' }));
+        .filter((p: string) => p.includes(query))
+        .map((p: string) => ({ icon: 'flag', label: p.toUpperCase(), val: p, type: 'priority' }));
       
       if (priorities.includes(query as Priority)) setStagedMeta(s => ({ ...s, priority: query as Priority }));
 
@@ -313,13 +326,7 @@ export function useQuickEntryController({
 
   useEffect(() => {
     if (activePopover === 'schedule' && datePickerRef.current) {
-      // Check if showPicker exists
-      if (typeof datePickerRef.current.showPicker === 'function') {
-        datePickerRef.current.showPicker();
-      } else {
-        // Fallback for browsers that don't support showPicker()
-        datePickerRef.current.focus();
-      }
+      (datePickerRef.current as any).showPicker?.();
       setActivePopover(null);
     }
   }, [activePopover]);
