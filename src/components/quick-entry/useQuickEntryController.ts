@@ -10,6 +10,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { useStore } from '@/store/useStore';
 import { Priority, Recurrence } from '@/lib/types';
 import { getLocalDateStr, parseNaturalTime } from '@/lib/date';
+import { PopoverType } from './types';
 
 export const WISDOM_QUOTES: Record<string, { quote: string; source: string }> = {
   work: {
@@ -45,12 +46,12 @@ export function useQuickEntryController({
 }: UseQuickEntryControllerProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const datePickerRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
 
   const [isClosing, setIsClosing] = useState(false);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
-  const [activePopover, setActivePopover] = useState<string | null>(null);
+  const [activePopover, setActivePopover] = useState<PopoverType>(null);
 
   const [stagedMeta, setStagedMeta] = useState<{
     assigneeId: string | null;
@@ -487,7 +488,7 @@ export function useQuickEntryController({
     desc,
     stagedMeta,
     menu,
-    activePopover,
+    activePopover: activePopover as PopoverType,
     users,
     tags,
     projects,
