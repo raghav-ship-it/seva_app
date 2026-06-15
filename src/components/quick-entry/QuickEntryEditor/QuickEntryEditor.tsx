@@ -45,20 +45,18 @@ export default function QuickEntryEditor({
   popoverRef,
   datePickerRef,
   setStagedMeta,
+  stagedMeta,
+  users,
 }: QuickEntryEditorProps) {
   return (
     <div className={styles.container} ref={popoverRef}>
-      <div className={styles.header}>
+      <div className={styles.header}> 
         <div className={styles.editorWrapper}>
           {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
           <EditorContent editor={editor} />
         </div>
-
-        {/*<div className={styles.dictateBtn}>
-          <span className="opacity-70 text-[10px] uppercase font-mono">|||</span> DICTATE
-          <i className={`fas fa-wave-square text-red-500 animate-pulse ${styles.dictateIcon}`}></i>
-        </div>**/}
-
+        
+        
         {menu && (
           <div className={styles.menu}>
             {menu.items.map((it: MenuItem, i: number) => (
@@ -78,6 +76,9 @@ export default function QuickEntryEditor({
           </div>
         )}
       </div>
+      <div className={styles.hint}>
+          Use <span className={styles.hintShortcut}>#</span> for tags, <span className={styles.hintShortcut}>@</span> for assignees, <span className={styles.hintShortcut}>/</span> for projects, <span className={styles.hintShortcut}>+</span> for Alarm, <span className={styles.hintShortcut}>*</span> for Recurrence. 
+        </div>
 
       <textarea
         value={desc}

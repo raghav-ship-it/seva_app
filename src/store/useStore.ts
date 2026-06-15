@@ -23,8 +23,8 @@ interface AppStore extends AppState {
   
   // Global Quick Entry Modal controls
   isQuickEntryOpen: boolean;
-  quickEntryDefaults: { dueDate: string | null; project: string | null; };
-  openQuickEntry: (defaults?: { dueDate?: string | null; project?: string | null; }) => void;
+  quickEntryDefaults: { dueDate: string | null; project: string | null; myDay: boolean };
+  openQuickEntry: (defaults?: { dueDate?: string | null; project?: string | null; myDay?: boolean }) => void;
   closeQuickEntry: () => void;
 
   // Global Detail Drawer & Admin Alerts actions
@@ -66,7 +66,7 @@ export const useStore = create<AppStore>()(
       
       // Global Modal State
       isQuickEntryOpen: false,
-      quickEntryDefaults: { dueDate: null, project: null },
+      quickEntryDefaults: { dueDate: null, project: null, myDay: false },
 
       switchUser: (id) => {
         const user = get().users.find(u => u.id === id);
@@ -325,7 +325,8 @@ export const useStore = create<AppStore>()(
           isQuickEntryOpen: true,
           quickEntryDefaults: {
             dueDate: defaults?.dueDate || null,
-            project: defaults?.project || null
+            project: defaults?.project || null,
+            myDay: defaults?.myDay || false
           }
         });
       },

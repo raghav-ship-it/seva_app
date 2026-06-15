@@ -11,6 +11,7 @@ export interface QuickEntryModalProps {
   onClose: () => void;
   defaultDueDate?: string | null;
   defaultProject?: string | null;
+  defaultMyDay?: boolean;
 }
 
 export default function QuickEntryModal({
@@ -18,12 +19,14 @@ export default function QuickEntryModal({
   onClose,
   defaultDueDate = null,
   defaultProject = null,
+  defaultMyDay = false,
 }: QuickEntryModalProps) {
   const controller = useQuickEntryController({
     isOpen,
     onClose,
     defaultDueDate,
     defaultProject,
+    defaultMyDay,
   });
 
   return (
@@ -36,9 +39,6 @@ export default function QuickEntryModal({
       <QuickEntryEditor
         editor={controller.editor}
         EditorContent={controller.EditorContent}
-        title={controller.title}
-        desc={controller.desc}
-        setDesc={controller.setDesc}
         stagedMeta={controller.stagedMeta}
         users={controller.users}
         tags={controller.tags}

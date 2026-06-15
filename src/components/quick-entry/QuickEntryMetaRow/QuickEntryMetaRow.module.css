@@ -1,10 +1,16 @@
 .metaContainer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.375rem;
   margin-top: 0.5rem;
   padding: 0 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.metaContainer::-webkit-scrollbar {
+  display: none;
 }
 
 .metaItem {

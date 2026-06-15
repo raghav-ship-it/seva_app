@@ -36,6 +36,7 @@ interface UseQuickEntryControllerProps {
   onClose: () => void;
   defaultDueDate?: string | null;
   defaultProject?: string | null;
+  defaultMyDay?: boolean;
 }
 
 export function useQuickEntryController({
@@ -43,6 +44,7 @@ export function useQuickEntryController({
   onClose,
   defaultDueDate = null,
   defaultProject = null,
+  defaultMyDay = false,
 }: UseQuickEntryControllerProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -62,6 +64,7 @@ export function useQuickEntryController({
     dueTime: string | null;
     reminder: string | null;
     recurrence: Recurrence;
+    myDay: boolean;
   }>({
     assigneeId: null,
     projectId: defaultProject,
@@ -71,6 +74,7 @@ export function useQuickEntryController({
     dueTime: null,
     reminder: null,
     recurrence: null,
+    myDay: defaultMyDay,
   });
 
   const [menu, setMenu] = useState<{
@@ -90,6 +94,7 @@ export function useQuickEntryController({
   const tags = useStore((s: any) => s.tags) || [];
   const projects = useStore((s: any) => s.projects) || [];
   const trackUsedToken = useStore((s: any) => s.trackUsedToken);
+  const currentUser = useStore((s: any) => s.currentUser);
   const addTask = useStore((s: any) => s.addTask);
 
   const handleClose = useCallback(() => {
@@ -126,7 +131,11 @@ export function useQuickEntryController({
         .map((u: any) => ({ icon: 'user', label: u.name, val: u.id, type: 'assignee' }));
       
       const exactMatch = users.find((u: any) => u.name.toLowerCase() === query);
-      if (exactMatch) setStagedMeta(s => ({ ...s, assigneeId: exactMatch.id }));
+      if (exactMatch) {
+        if (currentUser?.role === 'admin' || exactMatch.id === currentUser?.id) {
+          setStagedMeta(s => ({ ...s, assigneeId: exactMatch.id }));
+        }
+      }
       
       if (filtered.length) {
         setMenu({ items: filtered, type: 'assignee', index: 0, startPos: text.length - lastWord.length });
@@ -208,13 +217,13 @@ export function useQuickEntryController({
     }
 
     setMenu(null);
-  }, [users, tags, projects]);
+  }, [users, tags, projects, currentUser]);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: 'What needs to be done?',
+        placeholder: 'Add a task title...',
       }),
     ],
     onUpdate({ editor }) {
@@ -338,6 +347,7 @@ export function useQuickEntryController({
     let tokenToInsert = '';
     if (type === 'new_user' || type === 'assignee') {
       const user = users.find((u: any) => u.id === val);
+      if (currentUser?.role !== 'admin' && val !== currentUser?.id) return; // Prevent unauthorized
       tokenToInsert = `@${user ? user.name.split(' ')[0] : val}`;
       setStagedMeta((s) => ({ ...s, assigneeId: val }));
     } else if (type === 'new_tag' || type === 'tag') {
@@ -369,11 +379,11 @@ export function useQuickEntryController({
 
     const replaced = `${before}${tokenToInsert} ${after}`;
 
-    editor.commands.setContent(replaced.trimEnd());
+    editor.commands.setContent(replaced);
     setTitle(replaced.trimEnd());
     setMenu(null);
     editor.commands.focus('end');
-  }, [editor, menu, users]);
+  }, [editor, menu, users, currentUser]);
 
   // Focus trap / keyboard handler configuration safely avoiding race traps
   useEffect(() => {
@@ -430,15 +440,18 @@ export function useQuickEntryController({
       dueTime: null,
       reminder: null,
       recurrence: null,
+      myDay: defaultMyDay,
     });
     if (editor) editor.commands.clearContent();
   };
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    const fullText = editor?.getText() || '';
+    if (!fullText.trim()) return;
 
-    // Identify and remove tokens from the title
-    let cleanedTitle = title;
+    const [rawTitle, ...descLines] = fullText.split('\n');
+    let cleanedTitle = rawTitle.trim();
+    const description = descLines.join('\n').trim();
     
     const tokensToRemove: string[] = [];
     if (stagedMeta.assigneeId) {
@@ -463,10 +476,14 @@ export function useQuickEntryController({
         cleanedTitle = cleanedTitle.replace(token, '').trim();
     });
 
+    const finalAssigneeId = (currentUser?.role !== 'admin' && stagedMeta.assigneeId && stagedMeta.assigneeId !== currentUser?.id) ? currentUser?.id : stagedMeta.assigneeId;
+
     addTask({
       title: cleanedTitle,
-      description: desc.trim(),
+      description: description,
       ...stagedMeta,
+      assigneeId: finalAssigneeId,
+      creatorId: currentUser?.id
     });
     handleClearDraft();
     onClose();

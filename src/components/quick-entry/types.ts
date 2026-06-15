@@ -9,6 +9,7 @@ export interface MetaState {
   dueTime: string | null;
   reminder: string | null;
   recurrence: 'daily' | 'weekly' | 'monthly' | null;
+  myDay: boolean;
 }
 
 export interface MenuItem {

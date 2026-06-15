@@ -21,15 +21,6 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={`flex w-full h-full relative ${isDarkMode ? 'dark-theme' : ''}`}>
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={styles.videoBackground}
-        src="/animations/sun.mp4"
-      />
-      
       <div className={`flex-1 flex flex-col w-full h-full ${styles.glassSurface} relative z-10`}>
         {children}
       </div>
@@ -41,6 +32,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
           onClose={closeQuickEntry}
           defaultDueDate={quickEntryDefaults.dueDate}
           defaultProject={quickEntryDefaults.project}
+          defaultMyDay={quickEntryDefaults.myDay}
         />
       )}
     </div>
