@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQuickEntryController } from '@/components/quick-entry/useQuickEntryController';
 import QuickEntryShell from '@/components/quick-entry/QuickEntryShell/QuickEntryShell';
 import QuickEntryEditor from '@/components/quick-entry/QuickEntryEditor/QuickEntryEditor';
@@ -25,6 +26,15 @@ export default function QuickEntryModal({
     defaultDueDate,
     defaultProject,
   });
+
+  useEffect(() => {
+    if (isOpen && controller.editor) {
+      // Small timeout to ensure the editor is fully mounted
+      setTimeout(() => {
+        controller.editor?.commands.focus();
+      }, 100);
+    }
+  }, [isOpen, controller.editor]);
 
   return (
     <QuickEntryShell
