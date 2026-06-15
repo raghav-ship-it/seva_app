@@ -3,6 +3,7 @@
 import React from 'react';
 import type { Editor } from '@tiptap/react';
 import { PopoverType, MetaState, Menu, MenuItem } from '../types';
+import { TokenToolbar } from '../TokenToolbar/TokenToolbar';
 
 import styles from './QuickEntryEditor.module.css';
 
@@ -48,8 +49,14 @@ export default function QuickEntryEditor({
   stagedMeta,
   users,
 }: QuickEntryEditorProps) {
+  const handleTokenClick = (symbol: string) => {
+    editor?.commands.insertContent(symbol);
+    editor?.commands.focus();
+  };
+
   return (
     <div className={styles.container} ref={popoverRef}>
+      <TokenToolbar onTokenClick={handleTokenClick} />
       <div className={styles.header}> 
         <div className={styles.editorWrapper}>
           {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
@@ -77,7 +84,7 @@ export default function QuickEntryEditor({
         )}
       </div>
       <div className={styles.hint}>
-          Use <span className={styles.hintShortcut}>#</span> for tags, <span className={styles.hintShortcut}>@</span> for assignees, <span className={styles.hintShortcut}>/</span> for projects, <span className={styles.hintShortcut}>+</span> for Alarm, <span className={styles.hintShortcut}>*</span> for Recurrence. 
+          Use <span className={styles.hintShortcut}>#</span> for tags, <span className={styles.hintShortcut}>@</span> for assignees, <span className={styles.hintShortcut}>^</span> for projects, <span className={styles.hintShortcut}>+</span> for Alarm, <span className={styles.hintShortcut}>*</span> for Recurrence. 
         </div>
 
       <textarea
