@@ -1,0 +1,133 @@
+/* Redesigned Quick Task Entry Mirror for Inline Highlighting */
+.mirrorInputContainer {
+    position: relative;
+    width: 100%;
+}
+
+.mirrorTextarea, .realTextarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: normal;
+    padding: 12px 16px;
+    border: none;
+    outline: none;
+    margin: 0;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.realTextarea {
+    position: relative;
+    color: transparent;
+    caret-color: var(--text-main);
+    background: transparent;
+    z-index: 10;
+}
+
+.mirrorTextarea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    color: var(--text-main);
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+}
+
+/* Highlights styling in input mirror */
+.hlUser {
+    color: #1e40af;
+    background: #dbeafe;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlUser {
+    color: #93c5fd;
+    background: rgba(30, 64, 175, 0.4);
+}
+
+.hlTag {
+    color: #6b21a8;
+    background: #f3e8ff;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlTag {
+    color: #c084fc;
+    background: rgba(107, 33, 168, 0.4);
+}
+
+.hlProject {
+    color: #15803d;
+    background: #dcfce7;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlProject {
+    color: #86efac;
+    background: rgba(21, 128, 61, 0.4);
+}
+
+.hlPriority {
+    color: #b91c1c;
+    background: #fee2e2;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlPriority {
+    color: #fca5a5;
+    background: rgba(185, 28, 28, 0.4);
+}
+
+.hlDate {
+    color: #9a3412;
+    background: #ffedd5;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlDate {
+    color: #fdba74;
+    background: rgba(154, 52, 18, 0.4);
+}
+
+.hlReminder {
+    color: #0d9488;
+    background: #ccfbf1;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlReminder {
+    color: #5eead4;
+    background: rgba(13, 148, 136, 0.4);
+}
+
+.hlRecurrence {
+    color: #c2410c;
+    background: #ffedd5;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.5px 4px;
+    margin: 0 1px;
+}
+:global(.dark-theme) .hlRecurrence {
+    color: #fdba74;
+    background: rgba(194, 65, 12, 0.4);
+}

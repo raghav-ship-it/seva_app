@@ -1,0 +1,61 @@
+/* Bottom Nav */
+.bottomNav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 768px) {
+    .bottomNav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+}
+
+.navTab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex: 1;
+}
+
+.navTab.active {
+    color: var(--accent);
+}
+
+.navTab i {
+    font-size: 18px;
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: var(--accent);
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 10px;
+    min-width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--bg-primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

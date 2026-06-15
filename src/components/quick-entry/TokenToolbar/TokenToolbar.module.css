@@ -1,0 +1,22 @@
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  overflow-x: auto;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  height: 3rem;
+  border-radius: 0.5rem;
+  border: 2px solid;
+  background-color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
