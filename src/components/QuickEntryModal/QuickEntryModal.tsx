@@ -11,20 +11,23 @@ export interface QuickEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultDueDate?: string | null;
-  defaultProject?: string | null; // Added coordinate prop
+  defaultProject?: string | null;
+  defaultMyDay?: boolean;
 }
 
 export default function QuickEntryModal({
   isOpen,
   onClose,
   defaultDueDate = null,
-  defaultProject = null, // Set default
+  defaultProject = null,
+  defaultMyDay = false,
 }: QuickEntryModalProps) {
   const controller = useQuickEntryController({
     isOpen,
     onClose,
     defaultDueDate,
     defaultProject,
+    defaultMyDay,
   });
 
   useEffect(() => {
