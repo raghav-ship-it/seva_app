@@ -55,6 +55,21 @@ export function useQuickEntryController({
   const [desc, setDesc] = useState('');
   const [activePopover, setActivePopover] = useState<PopoverType>(null);
 
+  const isDraftLoadingRef = useRef(false);
+  const isFixingSpacingRef = useRef(false);
+
+  // Store hooks (must be before any useState that references store values)
+  const modalDraft = useStore((s: any) => s.modalDraft);
+  const saveModalDraft = useStore((s: any) => s.saveModalDraft);
+  const clearModalDraft = useStore((s: any) => s.clearModalDraft);
+  const users = useStore((s: any) => s.users) || [];
+  const tags = useStore((s: any) => s.tags) || [];
+  const projects = useStore((s: any) => s.projects) || [];
+  const addTag = useStore((s: any) => s.addTag);
+  const trackUsedToken = useStore((s: any) => s.trackUsedToken);
+  const currentUser = useStore((s: any) => s.currentUser);
+  const addTask = useStore((s: any) => s.addTask);
+
   const [stagedMeta, setStagedMeta] = useState<{
     assigneeId: string | null;
     projectId: string | null;
@@ -83,21 +98,6 @@ export function useQuickEntryController({
     index: number;
     startPos: number;
   } | null>(null);
-
-  const isDraftLoadingRef = useRef(false);
-  const isFixingSpacingRef = useRef(false);
-
-  // Store Mock hooks
-  const modalDraft = useStore((s: any) => s.modalDraft);
-  const saveModalDraft = useStore((s: any) => s.saveModalDraft);
-  const clearModalDraft = useStore((s: any) => s.clearModalDraft);
-  const users = useStore((s: any) => s.users) || [];
-  const tags = useStore((s: any) => s.tags) || [];
-  const projects = useStore((s: any) => s.projects) || [];
-  const addTag = useStore((s: any) => s.addTag);
-  const trackUsedToken = useStore((s: any) => s.trackUsedToken);
-  const currentUser = useStore((s: any) => s.currentUser);
-  const addTask = useStore((s: any) => s.addTask);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
