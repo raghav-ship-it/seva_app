@@ -66,7 +66,7 @@ export function useQuickEntryController({
     recurrence: Recurrence;
     myDay: boolean;
   }>({
-    assigneeId: null,
+    assigneeId: currentUser?.role === 'admin' ? null : (currentUser?.id ?? null),
     projectId: defaultProject,
     tags: [],
     priority: null,
@@ -85,6 +85,7 @@ export function useQuickEntryController({
   } | null>(null);
 
   const isDraftLoadingRef = useRef(false);
+  const isFixingSpacingRef = useRef(false);
 
   // Store Mock hooks
   const modalDraft = useStore((s: any) => s.modalDraft);
@@ -93,6 +94,7 @@ export function useQuickEntryController({
   const users = useStore((s: any) => s.users) || [];
   const tags = useStore((s: any) => s.tags) || [];
   const projects = useStore((s: any) => s.projects) || [];
+  const addTag = useStore((s: any) => s.addTag);
   const trackUsedToken = useStore((s: any) => s.trackUsedToken);
   const currentUser = useStore((s: any) => s.currentUser);
   const addTask = useStore((s: any) => s.addTask);
@@ -122,6 +124,22 @@ export function useQuickEntryController({
     // Look back extraction parsing checks
     const words = text.split(/\s+/);
     const lastWord = words[words.length - 1] || '';
+    
+    // Fix concatenated tokens: @user!p1 -> @user !p1
+    const match = lastWord.match(/([@#^!+*]\w+)([@#^!+*]\w+)/);
+    if (match && editor && !isFixingSpacingRef.current) {
+        isFixingSpacingRef.current = true;
+        
+        // Use insertText command instead of direct index calculation
+        editor.chain()
+            .focus()
+            .insertContentAt(editor.state.selection.from - match[2].length, ' ')
+            .run();
+            
+        isFixingSpacingRef.current = false;
+        return; // Wait for next update
+    }
+
     // ... rest of existing token logic
 
     if (lastWord.startsWith('@')) {
@@ -149,8 +167,10 @@ export function useQuickEntryController({
         .filter((t: string) => t.toLowerCase().includes(query))
         .map((t: string) => ({ icon: 'tag', label: `#${t}`, val: t, type: 'tag' }));
       
-      if (tags.some((t: string) => t.toLowerCase() === query)) setStagedMeta(s => ({ ...s, tags: s.tags.includes(query) ? s.tags : [...s.tags, query] }));
-
+      if (query && !tags.some((t: string) => t.toLowerCase() === query)) {
+          filtered.push({ icon: 'plus', label: `Create #${query}`, val: query, type: 'new_tag' });
+      }
+      
       if (filtered.length) {
         setMenu({ items: filtered, type: 'tag', index: 0, startPos: text.length - lastWord.length });
         return;
@@ -220,6 +240,7 @@ export function useQuickEntryController({
   }, [users, tags, projects, currentUser]);
 
   const editor = useEditor({
+    immediatelyRender: true,
     extensions: [
       StarterKit,
       Placeholder.configure({
@@ -351,6 +372,9 @@ export function useQuickEntryController({
       tokenToInsert = `@${user ? user.name.split(' ')[0] : val}`;
       setStagedMeta((s) => ({ ...s, assigneeId: val }));
     } else if (type === 'new_tag' || type === 'tag') {
+      if (type === 'new_tag') {
+          addTag(val as string);
+      }
       tokenToInsert = `#${val}`;
       setStagedMeta((s) => ({
         ...s,
@@ -375,9 +399,10 @@ export function useQuickEntryController({
     const before = text.slice(0, Math.max(0, menu.startPos));
     const words = text.split(/\s+/);
     const lastWordLength = (words[words.length - 1] || '').length;
+    
+    // Ensure trailing space exists
     const after = text.slice(menu.startPos + lastWordLength);
-
-    const replaced = `${before}${tokenToInsert} ${after}`;
+    const replaced = `${before}${tokenToInsert} ${after.trimStart()}`;
 
     editor.commands.setContent(replaced);
     setTitle(replaced.trimEnd());
@@ -476,7 +501,9 @@ export function useQuickEntryController({
         cleanedTitle = cleanedTitle.replace(token, '').trim();
     });
 
-    const finalAssigneeId = (currentUser?.role !== 'admin' && stagedMeta.assigneeId && stagedMeta.assigneeId !== currentUser?.id) ? currentUser?.id : stagedMeta.assigneeId;
+    const finalAssigneeId = currentUser?.role === 'admin'
+      ? stagedMeta.assigneeId
+      : currentUser?.id ?? null;
 
     addTask({
       title: cleanedTitle,
@@ -510,6 +537,7 @@ export function useQuickEntryController({
     tags,
     projects,
     activeWisdom,
+    isAdmin: currentUser?.role === 'admin',
     setDesc,
     setMenu,
     setActivePopover,

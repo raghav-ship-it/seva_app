@@ -36,6 +36,7 @@ interface AppStore extends AppState {
   clearAdminNotifications: () => void;
   toggleSidebar: () => void;
   closeSidebar: () => void;
+  setActiveFilter: (filter: { type: 'project' | 'tag' | 'all'; value?: string }) => void;
 }
 
 const INITIAL_USERS: User[] = [
@@ -63,6 +64,7 @@ export const useStore = create<AppStore>()(
       adminNotifications: [],
       activeDetailTaskId: null,
       isSidebarOpen: false,
+      activeFilter: { type: 'all' },
       
       // Global Modal State
       isQuickEntryOpen: false,
@@ -476,6 +478,9 @@ export const useStore = create<AppStore>()(
 
       closeSidebar: () => {
         set({ isSidebarOpen: false });
+      },
+      setActiveFilter: (filter) => {
+        set({ activeFilter: filter });
       }
     }),
     {

@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import styles from './Sidebar.module.css';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { 
     currentUser, 
     switchUser, 
@@ -22,7 +23,7 @@ const Sidebar = () => {
     clearAdminNotifications,
     openTaskDetail,
     isSidebarOpen,
-    closeSidebar
+    closeSidebar,
   } = useStore();
 
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
@@ -261,7 +262,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={p} 
-                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
+                    onClick={() => { router.push(`/tasks?project=${encodeURIComponent(p)}`); handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">
@@ -299,7 +300,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={t} 
-                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
+                    onClick={() => { router.push(`/tasks?tag=${encodeURIComponent(t)}`); handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">

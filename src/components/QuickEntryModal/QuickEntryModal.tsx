@@ -66,6 +66,7 @@ export default function QuickEntryModal({
         popoverRef={controller.popoverRef}
         datePickerRef={controller.datePickerRef}
         setStagedMeta={controller.setStagedMeta}
+        isAdmin={controller.isAdmin}
       />
 
       <QuickEntryMetaRow

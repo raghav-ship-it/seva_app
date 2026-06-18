@@ -34,6 +34,7 @@ export interface QuickEntryEditorProps {
   popoverRef: React.RefObject<HTMLDivElement | null>;
   datePickerRef: React.RefObject<HTMLInputElement | null>;
   setStagedMeta: (updater: (prev: MetaState) => MetaState) => void;
+  isAdmin?: boolean;
 }
 
 export default function QuickEntryEditor({
@@ -48,6 +49,7 @@ export default function QuickEntryEditor({
   setStagedMeta,
   stagedMeta,
   users,
+  isAdmin = false,
 }: QuickEntryEditorProps) {
   const handleTokenClick = (symbol: string) => {
     editor?.commands.insertContent(symbol);
@@ -56,7 +58,7 @@ export default function QuickEntryEditor({
 
   return (
     <div className={styles.container} ref={popoverRef}>
-      <TokenToolbar onTokenClick={handleTokenClick} />
+      <TokenToolbar onTokenClick={handleTokenClick} isAdmin={isAdmin} />
       <div className={styles.header}> 
         <div className={styles.editorWrapper}>
           {/* eslint-disable-next-line react/jsx-no-useless-fragment */}
@@ -83,9 +85,6 @@ export default function QuickEntryEditor({
           </div>
         )}
       </div>
-      <div className={styles.hint}>
-          Use <span className={styles.hintShortcut}>#</span> for tags, <span className={styles.hintShortcut}>@</span> for assignees, <span className={styles.hintShortcut}>^</span> for projects, <span className={styles.hintShortcut}>+</span> for Alarm, <span className={styles.hintShortcut}>*</span> for Recurrence. 
-        </div>
 
       <textarea
         value={desc}
