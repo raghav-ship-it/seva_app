@@ -107,9 +107,9 @@ export default function UpcomingPage() {
     }
   });
 
-  const renderSection = (title: string, taskList: typeof tasks, datePreset: string | null, isOverdue = false) => {
+  const renderSection = (title: string, taskList: typeof tasks, datePreset: string | null, isOverdue = false, key?: string) => {
     return (
-      <section className="group/section mb-10 transition-all">
+      <section key={key} className="group/section mb-10 transition-all">
         <h2 className="text-sm font-bold border-b border-[var(--border-color)] pb-2 mb-3 text-[var(--text-main)] flex items-center justify-between">
           <span className="flex items-center gap-2">
             {title}
@@ -162,7 +162,7 @@ export default function UpcomingPage() {
 
       {/* Next 7 Days */}
       {next7Days.map(dayGroup => 
-        renderSection(dayGroup.label, dayGroup.tasks, dayGroup.dateStr)
+        renderSection(dayGroup.label, dayGroup.tasks, dayGroup.dateStr, false, dayGroup.dateStr)
       )}
 
       {/* Later */}

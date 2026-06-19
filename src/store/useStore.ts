@@ -28,7 +28,6 @@ function dbTaskToLocal(t: any): Task {
 
 interface AppStore extends AppState {
   // Actions
-  switchUser: (id: string) => void;
   addTask: (task: Omit<Task, 'id' | 'status' | 'notified' | 'logs' | 'comments'>) => Promise<void>;
   updateTaskStatus: (id: number, status: TaskStatus) => void;
   toggleTaskCompletion: (id: number) => Promise<void>;
@@ -39,7 +38,6 @@ interface AppStore extends AppState {
   toggleTheme: () => void;
   addProject: (name: string) => void;
   addTag: (name: string) => void;
-  addUser: (name: string) => string;
   dismissNotification: (id: number) => void;
   trackUsedToken: (type: 'assignees' | 'tags' | 'projects', value: string) => void;
   saveModalDraft: (draft: AppState['modalDraft']) => void;
@@ -67,17 +65,11 @@ interface AppStore extends AppState {
   fetchUserData: () => Promise<void>;
 }
 
-const INITIAL_USERS: User[] = [
-  { id: 'u_1', name: 'Aditya (Admin)', role: 'admin' },
-  { id: 'u_2', name: 'Sarah (User)', role: 'user' },
-  { id: 'u_3', name: 'John (User)', role: 'user' }
-];
-
 export const useStore = create<AppStore>()(
   persist(
     (set, get) => ({
-      users: INITIAL_USERS,
-      currentUser: INITIAL_USERS[0],
+      users: [],
+      currentUser: null,
       tasks: [],
       projects: ['Work', 'Personal', 'Shopping'],
       tags: ['Marketing', 'Urgent', 'Low-effort'],
@@ -97,11 +89,6 @@ export const useStore = create<AppStore>()(
       // Global Modal State
       isQuickEntryOpen: false,
       quickEntryDefaults: { dueDate: null, project: null, myDay: false },
-
-      switchUser: (id) => {
-        const user = get().users.find(u => u.id === id);
-        if (user) set({ currentUser: user });
-      },
 
       addTask: async (taskData) => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -318,13 +305,6 @@ export const useStore = create<AppStore>()(
         set((state) => ({ tags: [...state.tags, name] }));
       },
 
-      addUser: (name) => {
-        const newId = 'u_' + Date.now();
-        set((state) => ({
-          users: [...state.users, { id: newId, name, role: 'user' }]
-        }));
-        return newId;
-      },
 
       dismissNotification: (id) => {
         set((state) => ({
@@ -533,27 +513,29 @@ export const useStore = create<AppStore>()(
 
       logout: async () => {
         await supabase.auth.signOut();
-        set({ currentUser: null, tasks: [], projects: [], tags: [] });
+        set({ currentUser: null, users: [], tasks: [], projects: [], tags: [] });
       },
 
       fetchUserData: async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (!profile) return;
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('id, name, role').eq('id', user.id).single();
+        if (profileError || !profile) return;
 
         const tasksQuery = profile.role === 'admin'
           ? supabase.from('tasks').select('*')
           : supabase.from('tasks').select('*').eq('assignee_id', user.id);
 
-        const [{ data: tasks }, { data: projects }, { data: tags }] = await Promise.all([
+        const [{ data: tasks }, { data: projects }, { data: tags }, { data: profiles }] = await Promise.all([
           tasksQuery,
           supabase.from('projects').select('name'),
           supabase.from('tags').select('name'),
+          supabase.from('profiles').select('id, name, role'),
         ]);
 
         set({
           currentUser: { id: profile.id, name: profile.name, role: profile.role },
+          users: (profiles || []).map((p: any) => ({ id: p.id, name: p.name, role: p.role })),
           tasks: (tasks || []).map(dbTaskToLocal),
           projects: (projects || []).map((p: any) => p.name),
           tags: (tags || []).map((t: any) => t.name),

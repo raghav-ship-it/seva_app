@@ -21,13 +21,19 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
         if (pathname !== '/login') router.replace('/login');
         return;
       }
-      if (!currentUser) {
-        await fetchUserData();
-      }
+      await fetchUserData();
+      if (pathname === '/login') router.replace('/home');
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session && pathname !== '/login') router.replace('/login');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!session) {
+        if (pathname !== '/login') router.replace('/login');
+        return;
+      }
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        await fetchUserData();
+        if (pathname === '/login') router.replace('/home');
+      }
     });
     return () => subscription.unsubscribe();
   }, []);

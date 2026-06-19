@@ -7,6 +7,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false, // Capacitor webview doesn't support URL-based OAuth
+    detectSessionInUrl: true,
   },
 });
