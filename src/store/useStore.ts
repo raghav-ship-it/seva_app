@@ -519,7 +519,24 @@ export const useStore = create<AppStore>()(
       fetchUserData: async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data: profile, error: profileError } = await supabase.from('profiles').select('id, name, role').eq('id', user.id).single();
+        let { data: profile, error: profileError } = await supabase.from('profiles').select('id, name, role').eq('id', user.id).single();
+        
+        if (profileError && profileError.code === 'PGRST116') {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              role: 'user'
+            })
+            .select('id, name, role')
+            .single();
+          if (!insertError) {
+            profile = newProfile;
+            profileError = null;
+          }
+        }
+        
         if (profileError || !profile) return;
 
         const tasksQuery = profile.role === 'admin'

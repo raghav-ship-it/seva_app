@@ -18,6 +18,8 @@ const TaskDetailDrawer = () => {
     tags,
     updateTaskFields, 
     addTaskComment,
+    toggleTaskCompletion,
+    updateTaskStatus,
   } = useStore();
 
   const task = tasks.find(t => t.id === activeDetailTaskId);
@@ -26,11 +28,12 @@ const TaskDetailDrawer = () => {
   const [desc, setDesc] = useState(task?.desc || '');
   const [commentText, setCommentText] = useState('');
   const [stagedAttachments, setStagedAttachments] = useState<TaskAttachment[]>([]);
-  const [activeSelect, setActiveSelect] = useState<'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm' | null>(null);
+  const [activeSelect, setActiveSelect] = useState<'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm' | 'status' | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timelineEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const touchStartY = useRef(0);
 
   // Swipe-to-close logic
@@ -44,6 +47,21 @@ const TaskDetailDrawer = () => {
       closeTaskDetail();
     }
   };
+
+  // Focus title input on load and put cursor at the end
+  useEffect(() => {
+    if (activeDetailTaskId) {
+      setTitle(task?.title || '');
+      setDesc(task?.desc || '');
+      setTimeout(() => {
+        if (titleInputRef.current) {
+          titleInputRef.current.focus();
+          const len = titleInputRef.current.value.length;
+          titleInputRef.current.setSelectionRange(len, len);
+        }
+      }, 150);
+    }
+  }, [activeDetailTaskId, task?.id]);
 
   // Scroll to bottom of timeline when logs/comments change
   useEffect(() => {
@@ -65,7 +83,7 @@ const TaskDetailDrawer = () => {
 
   if (!task || !currentUser) return null;
 
-  type Selectable = 'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm';
+  type Selectable = 'assignee' | 'project' | 'priority' | 'reminder' | 'recurrence' | 'tags' | 'alarm' | 'status';
   type Token = { name: string; icon: string; type: Selectable };
 
   // Determine unimplemented tokens for the carousel
@@ -141,8 +159,23 @@ const TaskDetailDrawer = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <input 
+                  ref={titleInputRef}
                   value={title}
-                  onChange={(e) => { setTitle(e.target.value); handleUpdate({ title: e.target.value }); }}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                      if (title !== task.title) {
+                        handleUpdate({ title });
+                      }
+                    }
+                  }}
+                  onBlur={() => {
+                    if (title !== task.title) {
+                      handleUpdate({ title });
+                    }
+                  }}
                   className={styles.taskTitleInput}
                   placeholder="Task Name"
                 />
@@ -171,6 +204,50 @@ const TaskDetailDrawer = () => {
                 </div>
               )}
               <div className={styles.toolbar}>
+                {/* Status Select */}
+                <div className="relative" ref={activeSelect === 'status' ? dropdownRef : null}>
+                  <button 
+                    onClick={() => setActiveSelect(activeSelect === 'status' ? null : 'status')}
+                    className={`${styles.tagPill} ${
+                      task.status === 'completed' ? 'text-green-600 bg-green-50/50 hover:bg-green-100' :
+                      task.status === 'in_progress' ? 'text-blue-600 bg-blue-50/50 hover:bg-blue-100' :
+                      task.status === 'review' ? 'text-yellow-600 bg-yellow-50/50 hover:bg-yellow-100' : 'text-gray-500 hover:bg-gray-50'
+                    } font-bold`}
+                  >
+                    <i className="fas fa-check-circle text-[10px]"></i>
+                    {task.status === 'completed' ? 'Completed' :
+                     task.status === 'in_progress' ? 'Doing' :
+                     task.status === 'review' ? 'In Review' : 'Pending'}
+                  </button>
+                  {activeSelect === 'status' && (
+                    <div className={styles.dropdown}>
+                      {[
+                        { label: 'Pending', val: 'pending' },
+                        { label: 'Doing', val: 'in_progress' },
+                        { label: 'In Review', val: 'review' },
+                        { label: 'Completed', val: 'completed' }
+                      ].map(st => (
+                        <button 
+                          key={st.val} 
+                          onClick={() => {
+                            if (st.val === 'completed' && task.status !== 'completed') {
+                              toggleTaskCompletion(task.id);
+                            } else if (st.val !== 'completed' && task.status === 'completed') {
+                              toggleTaskCompletion(task.id);
+                            } else {
+                              updateTaskStatus(task.id, st.val as any);
+                            }
+                            setActiveSelect(null);
+                          }}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs hover:bg-[var(--border-color)] font-bold text-left w-full ${task.status === st.val ? 'bg-orange-50 text-orange-600' : ''}`}
+                        >
+                          {st.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Project Select */}
                 <div className="relative" ref={activeSelect === 'project' ? dropdownRef : null}>
                   <button 
@@ -317,22 +394,33 @@ const TaskDetailDrawer = () => {
                 <div className="relative" ref={activeSelect === 'alarm' ? dropdownRef : null}>
                   <button 
                     onClick={() => setActiveSelect(activeSelect === 'alarm' ? null : 'alarm')}
-                    className={`${styles.tagPill} text-gray-500 hover:bg-gray-50`}
+                    className={`${styles.tagPill} ${task.reminder ? 'text-purple-600 bg-purple-50/50 hover:bg-purple-100' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     <i className="fas fa-bell text-[10px]"></i>
-                    Alarm
+                    {task.reminder ? task.reminder === '0' ? 'At event time' : `${task.reminder}m before` : 'Alarm'}
                   </button>
                   {activeSelect === 'alarm' && (
                     <div className={styles.dropdown}>
-                      <button 
-                        onClick={() => { 
-                          // Placeholder for alarm scheduling logic
-                          setActiveSelect(null);
-                        }}
-                        className="px-3 py-2 rounded-lg text-xs text-left hover:bg-[var(--border-color)]"
-                      >
-                        Set Reminder
-                      </button>
+                      {[
+                        { label: 'No Alarm', val: null },
+                        { label: 'At event time', val: '0' },
+                        { label: '5m before', val: '5' },
+                        { label: '10m before', val: '10' },
+                        { label: '30m before', val: '30' },
+                        { label: '1h before', val: '60' },
+                        { label: '1d before', val: '1440' },
+                      ].map(rem => (
+                        <button 
+                          key={rem.label}
+                          onClick={() => { 
+                            handleUpdate({ reminder: rem.val }); 
+                            setActiveSelect(null); 
+                          }}
+                          className={`px-3 py-2 rounded-lg text-xs text-left hover:bg-[var(--border-color)] font-bold w-full ${task.reminder === rem.val ? 'bg-orange-50 text-orange-600' : ''}`}
+                        >
+                          {rem.label}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

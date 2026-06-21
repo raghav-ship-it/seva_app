@@ -14,6 +14,12 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
   const { toggleTaskCompletion, updateTaskStatus, toggleMyDay, deleteTask, users, openTaskDetail, updateTaskFields, currentUser } = useStore();
   
+  const [localTitle, setLocalTitle] = React.useState(task.title);
+
+  React.useEffect(() => {
+    setLocalTitle(task.title);
+  }, [task.title]);
+  
   const dDate = task.dueDate ? new Date(task.dueDate.includes('T') ? task.dueDate : `${task.dueDate}T00:00`) : null;
   const now = new Date();
   const todayStr = getLocalDateStr();
@@ -38,35 +44,40 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
 
   return (
     <div className={`${styles.taskItem} ${priorityClass} ${task.status === 'completed' ? 'opacity-50' : ''} transition-all hover:bg-[var(--bg-secondary)] px-4 group`}>
+      {/* Checkbox on the left */}
+      <div className="flex items-start pt-1.5 flex-shrink-0">
+        <div 
+          className={`${styles.checkbox} ${task.status === 'completed' ? styles.checked : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleTaskCompletion(task.id);
+          }}
+        />
+      </div>
+
       {/* Task Info Area */}
       <div 
         className="flex-1 min-w-0 cursor-pointer"
         onClick={() => openTaskDetail(task.id)}
       >
         <div className="flex items-center gap-2">
-          <select 
-            value={task.status} 
-            onChange={(e) => {
-              const val = e.target.value as Task['status'];
-              if (val === 'completed' && task.status !== 'completed') {
-                toggleTaskCompletion(task.id);
-              } else if (val !== 'completed' && task.status === 'completed') {
-                toggleTaskCompletion(task.id);
-              } else {
-                updateTaskStatus(task.id, val);
+          <textarea
+            value={localTitle}
+            onChange={(e) => setLocalTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.currentTarget.blur();
+                if (localTitle !== task.title) {
+                  updateTaskFields(task.id, { title: localTitle }, currentUser?.name || 'Unknown');
+                }
               }
             }}
-            onClick={(e) => e.stopPropagation()}
-            className={`${styles.statusBadge} ${s.class} border-none outline-none cursor-pointer appearance-none text-center`}
-          >
-            <option value="pending">Pending</option>
-            <option value="in_progress">Doing</option>
-            <option value="review">Review</option>
-            <option value="completed">Done</option>
-          </select>
-          <textarea
-            value={task.title}
-            onChange={(e) => updateTaskFields(task.id, { title: e.target.value }, currentUser?.name || 'Unknown')}
+            onBlur={() => {
+              if (localTitle !== task.title) {
+                updateTaskFields(task.id, { title: localTitle }, currentUser?.name || 'Unknown');
+              }
+            }}
             onClick={(e) => e.stopPropagation()}
             className={`${styles.titleTextarea} text-base font-bold tracking-tight text-[var(--text-main)] bg-transparent border-none outline-none resize-none overflow-hidden flex-1 ${
               task.status === 'completed' ? 'line-through text-[var(--text-muted)] opacity-60' : ''
@@ -138,24 +149,47 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
       </div>
 
       {/* Task Row Actions */}
-      <div className="flex items-center gap-2.5 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-        <button 
-          onClick={() => toggleMyDay(task.id)}
-          className={`w-7 h-7 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center transition-all ${
-            task.myDay ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'
-          }`}
-          title={task.myDay ? "Remove from My Day" : "Add to My Day"}
+      <div className="flex items-center gap-2.5 flex-shrink-0">
+        <select 
+          value={task.status} 
+          onChange={(e) => {
+            const val = e.target.value as Task['status'];
+            if (val === 'completed' && task.status !== 'completed') {
+              toggleTaskCompletion(task.id);
+            } else if (val !== 'completed' && task.status === 'completed') {
+              toggleTaskCompletion(task.id);
+            } else {
+              updateTaskStatus(task.id, val);
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className={`${styles.statusBadge} ${s.class} border-none outline-none cursor-pointer appearance-none text-center font-bold`}
         >
-          <i className="fas fa-sun text-sm"></i>
-        </button>
-        
-        <button 
-          onClick={() => deleteTask(task.id)}
-          className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all"
-          title="Delete task"
-        >
-          <i className="fas fa-trash text-xs"></i>
-        </button>
+          <option value="pending">Pending</option>
+          <option value="in_progress">Doing</option>
+          <option value="review">Review</option>
+          <option value="completed">Done</option>
+        </select>
+
+        <div className="flex items-center gap-2.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={() => toggleMyDay(task.id)}
+            className={`w-7 h-7 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center transition-all ${
+              task.myDay ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'
+            }`}
+            title={task.myDay ? "Remove from My Day" : "Add to My Day"}
+          >
+            <i className="fas fa-sun text-sm"></i>
+          </button>
+          
+          <button 
+            onClick={() => deleteTask(task.id)}
+            className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all"
+            title="Delete task"
+          >
+            <i className="fas fa-trash text-xs"></i>
+          </button>
+        </div>
       </div>
     </div>
   );

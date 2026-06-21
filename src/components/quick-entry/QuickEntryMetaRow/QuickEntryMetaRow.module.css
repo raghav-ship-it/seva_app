@@ -138,3 +138,13 @@
 .removeTagBtn:hover {
   color: #5b21b6;
 }
+
+.metaButtonReminderActive {
+  border-color: #ddd6fe;
+  background-color: rgba(245, 243, 255, 0.4);
+  color: #7c3aed;
+}
+
+.metaButtonReminderActive:hover {
+  background-color: #f5f3ff;
+}

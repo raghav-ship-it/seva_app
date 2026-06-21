@@ -89,6 +89,7 @@
     padding: 2px 0;
     height: 1.5rem;
     white-space: nowrap;
+    cursor: text;
 }
 
 .titleTextarea:focus {

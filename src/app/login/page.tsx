@@ -26,16 +26,38 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: { 
+            data: { name },
+            emailRedirectTo: `${window.location.origin}/home`
+          },
         });
         if (error) throw error;
         setView('verify');
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        const { data: profile, error: profileError } = await supabase
+        
+        let { data: profile, error: profileError } = await supabase
           .from('profiles').select('*').eq('id', data.user.id).single();
-        if (profileError) throw profileError;
+          
+        if (profileError && profileError.code === 'PGRST116') {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+              role: 'user'
+            })
+            .select()
+            .single();
+            
+          if (insertError) throw insertError;
+          profile = newProfile;
+          profileError = null;
+        } else if (profileError) {
+          throw profileError;
+        }
+        
         if (profile) setCurrentUser({ id: profile.id, name: profile.name, role: profile.role });
         router.replace('/home');
       }
@@ -59,8 +81,25 @@ export default function LoginPage() {
       setResendMsg('Not verified yet. Try again shortly.');
       return;
     }
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('profiles').select('*').eq('id', session.user.id).single();
+      
+    if (profileError && profileError.code === 'PGRST116') {
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: session.user.id,
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+          role: 'user'
+        })
+        .select()
+        .single();
+      if (!insertError) {
+        profile = newProfile;
+        profileError = null;
+      }
+    }
+    
     if (profileError || !profile) {
       setResendMsg('Profile not ready yet. Please wait a moment.');
       return;
