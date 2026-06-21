@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "../styles/sidebar.css";
+import "../styles/placeholder.css";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ClientLayout from "@/components/ClientLayout/ClientLayout";
 import BottomNav from "@/components/BottomNav/BottomNav";
@@ -46,7 +47,9 @@ export default function RootLayout({
             </div>
             <main className="flex-1 overflow-y-auto relative h-full pb-[70px] md:pb-0">
               <MobileTopBar />
-              {children}
+              <div className="p-4 md:p-6">
+                {children}
+              </div>
             </main>
             <BottomNav />
           </div>

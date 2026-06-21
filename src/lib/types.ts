@@ -91,4 +91,5 @@ export interface AppState {
   adminNotifications: AdminNotification[];
   activeDetailTaskId: number | null;
   isSidebarOpen: boolean;
+  activeFilter: { type: 'project' | 'tag' | 'all'; value?: string };
 }

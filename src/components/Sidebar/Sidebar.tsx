@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import styles from './Sidebar.module.css';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { 
     currentUser, 
-    switchUser, 
     users, 
     projects, 
     tags,
@@ -22,7 +22,7 @@ const Sidebar = () => {
     clearAdminNotifications,
     openTaskDetail,
     isSidebarOpen,
-    closeSidebar
+    closeSidebar,
   } = useStore();
 
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
@@ -181,25 +181,6 @@ const Sidebar = () => {
           </div>
         </div>
 
-      {/* Switch Identity (Prototyping) */}
-      <div className="px-3 mb-2">
-        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Active Identity</p>
-        <div className="relative">
-          <select 
-            value={currentUser.id} 
-            onChange={(e) => switchUser(e.target.value)}
-            className="w-full text-xs py-2 px-3 pr-8 rounded-lg border border-[var(--border-color)] outline-none bg-[var(--bg-primary)] font-bold cursor-pointer appearance-none transition-all hover:border-gray-400"
-          >
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 text-xs">
-            <i className="fas fa-chevron-down"></i>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navigation */}
       <nav className="flex flex-col gap-0.5">
         {navItems.map((item) => (
@@ -261,7 +242,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={p} 
-                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
+                    onClick={() => { router.push(`/tasks?project=${encodeURIComponent(p)}`); handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">
@@ -299,7 +280,7 @@ const Sidebar = () => {
                 return (
                   <div 
                     key={t} 
-                    onClick={() => { /* filter logic if any */ handleNavClick(); }}
+                    onClick={() => { router.push(`/tasks?tag=${encodeURIComponent(t)}`); handleNavClick(); }}
                     className="flex items-center justify-between px-3 py-1.5 text-sm text-[var(--text-main)] hover:bg-[var(--border-color)] rounded-lg cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">

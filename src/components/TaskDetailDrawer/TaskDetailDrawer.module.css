@@ -91,6 +91,7 @@
   outline: none;
   width: 100%;
   letter-spacing: -0.025em;
+  cursor: text;
 }
 
 .toolbar {

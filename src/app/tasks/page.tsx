@@ -1,33 +1,52 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import TaskItem from '@/components/TaskItem/TaskItem';
 import FAB from '@/components/FAB/FAB';
 import ReminderAlert from '@/components/ReminderAlert';
 
-export default function TasksPage() {
+function TasksContent() {
   const { tasks, currentUser, clearCompleted } = useStore();
-  
-  const inboxTasks = tasks.filter(t => 
-    t.assigneeId === currentUser?.id && 
-    t.status !== 'completed'
-  );
+  const searchParams = useSearchParams();
 
-  const completedCount = tasks.filter(t => 
-    t.assigneeId === currentUser?.id && 
-    t.status === 'completed'
+  const projectParam = searchParams.get('project');
+  const tagParam = searchParams.get('tag');
+  const isAdmin = currentUser?.role === 'admin';
+
+  const inboxTasks = tasks.filter(t => {
+    if (t.status === 'completed') return false;
+    if (!isAdmin && t.assigneeId !== currentUser?.id) return false;
+    if (projectParam) return t.project === projectParam;
+    if (tagParam) return t.tags.includes(tagParam);
+    return t.assigneeId === currentUser?.id;
+  });
+
+  const completedCount = tasks.filter(t =>
+    t.assigneeId === currentUser?.id && t.status === 'completed'
   ).length;
+
+  const heading = projectParam ?? (tagParam ? `#${tagParam}` : 'Inbox');
+  const subheading = projectParam
+    ? `Tasks in ${projectParam}`
+    : tagParam
+    ? `Tasks tagged #${tagParam}`
+    : 'Everything assigned to you.';
 
   return (
     <div className="p-5 md:p-10 max-w-4xl mx-auto min-h-screen pb-32 animate-in fade-in duration-500">
       <header className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-main)] tracking-tight">Inbox</h1>
-          <p className="text-xs md:text-sm text-[var(--text-muted)] font-medium mt-1">Everything assigned to you.</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-main)] tracking-tight">
+            {heading}
+          </h1>
+          <p className="text-xs md:text-sm text-[var(--text-muted)] font-medium mt-1">
+            {subheading}
+          </p>
         </div>
         {completedCount > 0 && (
-          <button 
+          <button
             onClick={clearCompleted}
             className="text-[10px] md:text-sm font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-2 self-start md:self-auto"
           >
@@ -38,15 +57,15 @@ export default function TasksPage() {
 
       <section className="flex flex-col gap-1">
         {inboxTasks.length > 0 ? (
-          inboxTasks.map(t => (
-            <TaskItem key={t.id} task={t} />
-          ))
+          inboxTasks.map(t => <TaskItem key={t.id} task={t} />)
         ) : (
           <div className="py-20 text-center">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-2xl md:text-3xl mx-auto mb-6">
               <i className="fas fa-inbox"></i>
             </div>
-            <h3 className="text-base md:text-lg font-bold text-[var(--text-main)]">Inbox is empty</h3>
+            <h3 className="text-base md:text-lg font-bold text-[var(--text-main)]">
+              {projectParam || tagParam ? 'No tasks here' : 'Inbox is empty'}
+            </h3>
             <p className="text-xs md:text-sm text-[var(--text-muted)] mt-1">Ready for a new adventure?</p>
           </div>
         )}
@@ -55,5 +74,13 @@ export default function TasksPage() {
       <FAB />
       <ReminderAlert />
     </div>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense>
+      <TasksContent />
+    </Suspense>
   );
 }

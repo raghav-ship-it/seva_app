@@ -3,6 +3,7 @@ import styles from './TokenToolbar.module.css';
 
 interface TokenToolbarProps {
   onTokenClick: (token: string) => void;
+  isAdmin?: boolean;
 }
 
 const tokens = [
@@ -14,10 +15,11 @@ const tokens = [
   { symbol: '*', label: 'Recurrence', color: '#6366f1' },
 ];
 
-export const TokenToolbar: React.FC<TokenToolbarProps> = ({ onTokenClick }) => {
+export const TokenToolbar: React.FC<TokenToolbarProps> = ({ onTokenClick, isAdmin = false }) => {
+  const visibleTokens = isAdmin ? tokens : tokens.filter(t => t.symbol !== '@');
   return (
     <div className={styles.toolbar}>
-      {tokens.map((token) => (
+      {visibleTokens.map((token) => (
         <button
           key={token.symbol}
           className={styles.button}

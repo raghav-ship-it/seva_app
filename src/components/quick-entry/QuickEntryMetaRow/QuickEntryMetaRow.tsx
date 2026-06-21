@@ -151,6 +151,50 @@ export default function QuickEntryMetaRow({
             </div>
           )}
         </div>
+
+        {/* Alarm / Reminder */}
+        <div className={styles.metaItem}>
+          <button
+            type="button"
+            onClick={() => setActivePopover(activePopover === 'reminder' ? null : 'reminder')}
+            className={`${styles.metaButton} ${
+              stagedMeta.reminder ? styles.metaButtonReminderActive : ''
+            }`}
+          >
+            <i className="far fa-bell text-[10px]"></i>
+            <span>
+              {stagedMeta.reminder
+                ? stagedMeta.reminder === '0' ? 'At time of event' : `${stagedMeta.reminder}m before`
+                : 'Alarm'}
+            </span>
+          </button>
+
+          {activePopover === 'reminder' && (
+            <div className={styles.popover}>
+              {[
+                { label: 'No Alarm', val: null },
+                { label: 'At time of event', val: '0' },
+                { label: '5m before', val: '5' },
+                { label: '10m before', val: '10' },
+                { label: '30m before', val: '30' },
+                { label: '1h before', val: '60' },
+                { label: '1d before', val: '1440' },
+              ].map((rem) => (
+                <button
+                  key={rem.label}
+                  onClick={() => {
+                    setStagedMeta((s: MetaState) => ({ ...s, reminder: rem.val }));
+                    setActivePopover(null);
+                  }}
+                  className={styles.popoverItem}
+                >
+                  <i className="fas fa-bell text-gray-400 text-[10px]"></i>
+                  {rem.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chips */}
