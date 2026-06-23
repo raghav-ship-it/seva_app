@@ -281,31 +281,31 @@ const TaskDetailDrawer = () => {
                 </div>
 
                 {/* Due Date & Time */}
-                <div className={`${styles.dateSelect} ${task.dueDate ? 'text-orange-600 bg-orange-50/50' : 'text-gray-500'}`}>
-                  <button 
-                    onClick={() => {
-                        const iso = getLocalIsoDateTime(0, '12:00');
-                        const [date, time] = iso.split('T');
-                        handleUpdate({ dueDate: date, dueTime: time });
-                    }}
-                    className="mr-2 text-[8px] hover:text-orange-600"
-                    title="Set for Today"
-                  >
-                    <i className="fas fa-calendar-day"></i>
-                  </button>
+                <div className={`${styles.dateSelect} ${task.dueDate ? 'text-orange-600 bg-orange-50/50' : 'text-gray-400'}`}>
                   <i className="fas fa-calendar-alt text-[10px]"></i>
                   <input 
                     type="date"
                     value={task.dueDate || ''}
-                    onChange={(e) => handleUpdate({ dueDate: e.target.value })}
+                    onChange={(e) => handleUpdate({ dueDate: e.target.value || null })}
                     className={styles.dateSelectInput}
                   />
                   <input 
                     type="time"
                     value={task.dueTime || ''}
-                    onChange={(e) => handleUpdate({ dueTime: e.target.value })}
+                    onChange={(e) => handleUpdate({ dueTime: e.target.value || null })}
                     className={styles.dateSelectInput}
                   />
+                  {task.dueDate ? (
+                    <button
+                      onClick={() => handleUpdate({ dueDate: null, dueTime: null })}
+                      title="Clear date"
+                      className="text-gray-300 hover:text-red-500 transition-colors"
+                    >
+                      <i className="fas fa-times text-[10px]"></i>
+                    </button>
+                  ) : (
+                    <span className="text-gray-400 text-[10px] font-bold">?</span>
+                  )}
                 </div>
 
                 {/* Recurrence Select */}

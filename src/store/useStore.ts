@@ -36,8 +36,8 @@ interface AppStore extends AppState {
   clearMyDay: () => void;
   clearCompleted: () => void;
   toggleTheme: () => void;
-  addProject: (name: string) => void;
-  addTag: (name: string) => void;
+  addProject: (name: string) => Promise<void>;
+  addTag: (name: string) => Promise<void>;
   dismissNotification: (id: number) => void;
   trackUsedToken: (type: 'assignees' | 'tags' | 'projects', value: string) => void;
   saveModalDraft: (draft: AppState['modalDraft']) => void;
@@ -297,11 +297,15 @@ export const useStore = create<AppStore>()(
         set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' }));
       },
 
-      addProject: (name) => {
+      addProject: async (name) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await supabase.from('projects').insert({ name, owner_id: user.id });
         set((state) => ({ projects: [...state.projects, name] }));
       },
 
-      addTag: (name) => {
+      addTag: async (name) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) await supabase.from('tags').insert({ name, owner_id: user.id });
         set((state) => ({ tags: [...state.tags, name] }));
       },
 
@@ -366,6 +370,7 @@ export const useStore = create<AppStore>()(
 
           let desc = '';
           if (k === 'dueDate') desc = `changed due date from "${oldVal ? new Date(oldVal as string).toLocaleDateString() : 'No date'}" to "${newVal ? new Date(newVal as string).toLocaleDateString() : 'No date'}"`;
+          else if (k === 'reminder') desc = `set alarm to "${newVal != null ? (newVal === '0' ? 'event time' : `${newVal}m before`) : 'none'}"`;
           else if (k === 'assigneeId') {
             const oldUser = get().users.find(u => u.id === oldVal)?.name.split(' (')[0] || 'Unassigned';
             const newUser = get().users.find(u => u.id === newVal)?.name.split(' (')[0] || 'Unassigned';
@@ -381,7 +386,9 @@ export const useStore = create<AppStore>()(
           }
         });
 
-        if (logsToAdd.length === 0) return;
+        // Always write to DB if any field changed (even fields that don't generate logs like dueTime/tags)
+        const hasChange = Object.keys(fields).some(k => JSON.stringify(oldTask[k as keyof Task]) !== JSON.stringify(fields[k as keyof Task]));
+        if (!hasChange) return;
 
         // Build DB-shaped update
         const dbFields: any = { updated_at: new Date().toISOString() };
@@ -396,12 +403,12 @@ export const useStore = create<AppStore>()(
         if ('reminder' in fields) dbFields.reminder = fields.reminder;
         if ('recurrence' in fields) dbFields.recurrence = fields.recurrence;
         if ('assigneeId' in fields) dbFields.assignee_id = fields.assigneeId;
-        dbFields.logs = [...(oldTask.logs || []), ...logsToAdd];
+        if (logsToAdd.length > 0) dbFields.logs = [...(oldTask.logs || []), ...logsToAdd];
 
         await supabase.from('tasks').update(dbFields).eq('id', taskId);
 
         set(s => ({
-          tasks: s.tasks.map(t => t.id !== taskId ? t : { ...t, ...fields, logs: dbFields.logs })
+          tasks: s.tasks.map(t => t.id !== taskId ? t : { ...t, ...fields, logs: dbFields.logs ?? t.logs })
         }));
 
         // Reschedule alarm if time-sensitive fields changed
