@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [resendMsg, setResendMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,14 +211,24 @@ export default function LoginPage() {
             required
             className="w-full text-sm px-3 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] outline-none focus:border-[var(--accent)]"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="w-full text-sm px-3 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] outline-none focus:border-[var(--accent)]"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="w-full text-sm px-3 py-2.5 pr-10 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] outline-none focus:border-[var(--accent)]"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+              tabIndex={-1}
+            >
+              <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-xs`}></i>
+            </button>
+          </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
           <button
             type="submit"

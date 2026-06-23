@@ -5,3 +5,15 @@ node_modules/
 .dual-graph/
 out/
 *.tsbuildinfo
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Local Environment Secrets
+.env
+.env.local
+.env.*.local
