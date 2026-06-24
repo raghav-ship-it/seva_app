@@ -24,6 +24,17 @@ export default function QuickEntryMetaRow({
   setStagedMeta,
   removeTag,
 }: QuickEntryMetaRowProps) {
+  // Format ISO date into clean label like "Tomorrow" / "Monday" / "Jun 29"
+  const formatDateLabel = (iso: string): string => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = new Date(iso + 'T00:00');
+    const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    if (diff > 1 && diff < 7) return d.toLocaleDateString('en-US', { weekday: 'long' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
     <div>
       {/* Horizontal Meta Custom Badges */}
@@ -40,7 +51,7 @@ export default function QuickEntryMetaRow({
             <i className="far fa-calendar text-[10px]"></i>
             <span>
               {stagedMeta.dueDate
-                ? stagedMeta.dueDate
+                ? formatDateLabel(stagedMeta.dueDate)
                 : 'Schedule'}
             </span>
           </button>

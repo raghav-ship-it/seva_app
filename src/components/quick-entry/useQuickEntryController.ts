@@ -368,18 +368,13 @@ export function useQuickEntryController({
     let tokenToInsert = '';
     if (type === 'new_user' || type === 'assignee') {
       const user = users.find((u: any) => u.id === val);
-      if (currentUser?.role !== 'admin' && val !== currentUser?.id) return; // Prevent unauthorized
+      if (currentUser?.role !== 'admin' && val !== currentUser?.id) return;
       tokenToInsert = `@${user ? user.name.split(' ')[0] : val}`;
       setStagedMeta((s) => ({ ...s, assigneeId: val }));
     } else if (type === 'new_tag' || type === 'tag') {
-      if (type === 'new_tag') {
-          addTag(val as string);
-      }
+      if (type === 'new_tag') addTag(val as string);
       tokenToInsert = `#${val}`;
-      setStagedMeta((s) => ({
-        ...s,
-        tags: s.tags.includes(val) ? s.tags : [...s.tags, val],
-      }));
+      setStagedMeta((s) => ({ ...s, tags: s.tags.includes(val) ? s.tags : [...s.tags, val] }));
     } else if (type === 'new_project' || type === 'project') {
       tokenToInsert = `^${val}`;
       setStagedMeta((s) => ({ ...s, projectId: val }));
@@ -394,21 +389,25 @@ export function useQuickEntryController({
       setStagedMeta((s) => ({ ...s, recurrence: val }));
     }
 
-    // Replace the current trigger word (the last word that created the menu)
+    // Replace the trigger word in-place using Tiptap commands, then insert trailing space
+    // menu.startPos = character offset where trigger word starts
     const text = editor.getText();
-    const before = text.slice(0, Math.max(0, menu.startPos));
-    const words = text.split(/\s+/);
-    const lastWordLength = (words[words.length - 1] || '').length;
-    
-    // Ensure trailing space exists
-    const after = text.slice(menu.startPos + lastWordLength);
-    const replaced = `${before}${tokenToInsert} ${after.trimStart()}`;
+    const triggerWordLength = text.length - menu.startPos;
 
-    editor.commands.setContent(replaced);
-    setTitle(replaced.trimEnd());
+    // +1 for ProseMirror doc offset (doc starts at pos 1)
+    const from = menu.startPos + 1;
+    const to = from + triggerWordLength;
+
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from, to })
+      .insertContentAt(from, tokenToInsert + ' ')
+      .run();
+
+    setTitle(editor.getText());
     setMenu(null);
-    editor.commands.focus('end');
-  }, [editor, menu, users, currentUser]);
+  }, [editor, menu, users, currentUser, addTag]);
 
   // Focus trap / keyboard handler configuration safely avoiding race traps
   useEffect(() => {
