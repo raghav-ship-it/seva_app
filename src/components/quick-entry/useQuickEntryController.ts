@@ -126,7 +126,7 @@ export function useQuickEntryController({
     const lastWord = words[words.length - 1] || '';
     
     // Fix concatenated tokens: @user!p1 -> @user !p1
-    const match = lastWord.match(/([@#^!+*]\w+)([@#^!+*]\w+)/);
+    const match = lastWord.match(/([@#?^!+*]\w+)([@#?^!+*]\w+)/);
     if (match && editor && !isFixingSpacingRef.current) {
         isFixingSpacingRef.current = true;
         
@@ -192,16 +192,105 @@ export function useQuickEntryController({
       }
     }
 
-    if (lastWord.startsWith('^')) {
-      const query = lastWord.slice(1).toLowerCase();
-      const filtered = projects
-        .filter((p: string) => p.toLowerCase().includes(query))
-        .map((p: string) => ({ icon: 'folder', label: p, val: p, type: 'project' }));
-      
-      if (projects.some((p: string) => p.toLowerCase() === query)) setStagedMeta(s => ({ ...s, projectId: projects.find((p: string) => p.toLowerCase() === query) || null }));
+    if (lastWord.startsWith('?')) {
+      const query = lastWord.slice(1).toLowerCase().trim();
+      // Parse natural date strings: "tomorrow", "monday", "jun 29", "june 29", "29 jun", YYYY-MM-DD
+      const parseDate = (q: string): string | null => {
+        const today = new Date(); today.setHours(0,0,0,0);
+        if (!q) return null;
+        if (q === 'today') return today.toISOString().slice(0,10);
+        if (q === 'tomorrow') { const d = new Date(today); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+        const weekdays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+        const wIdx = weekdays.indexOf(q);
+        if (wIdx !== -1) {
+          const d = new Date(today);
+          const diff = (wIdx - d.getDay() + 7) % 7 || 7;
+          d.setDate(d.getDate() + diff);
+          return d.toISOString().slice(0,10);
+        }
+        const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const mMatch = q.match(/^([a-z]+)\s*(\d{1,2})$/) || q.match(/^(\d{1,2})\s*([a-z]+)$/);
+        if (mMatch) {
+          const [, a, b] = mMatch;
+          const mStr = isNaN(Number(a)) ? a.slice(0,3) : b.slice(0,3);
+          const dayNum = isNaN(Number(a)) ? Number(b) : Number(a);
+          const mIdx = months.indexOf(mStr);
+          if (mIdx !== -1) {
+            const year = today.getMonth() > mIdx ? today.getFullYear()+1 : today.getFullYear();
+            return `${year}-${String(mIdx+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+          }
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(q)) return q;
+        return null;
+      };
+      const parsed = parseDate(query);
+      if (parsed) {
+        setStagedMeta(s => ({ ...s, dueDate: parsed }));
+        // Replace the token in editor with clean date text
+        const text = editor?.getText() || '';
+        const before = text.slice(0, menu?.startPos ?? text.lastIndexOf('?'));
+        editor?.chain().focus().setContent(before).run();
+        setTitle(before);
+        setMenu(null);
+        return;
+      }
+      // Show date suggestion menu for common values
+      const suggestions = [
+        { label: 'Today', val: new Date().toISOString().slice(0,10), icon: 'calendar-day', type: 'date' },
+        { label: 'Tomorrow', val: new Date(Date.now()+86400000).toISOString().slice(0,10), icon: 'calendar-plus', type: 'date' },
+        ...['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => {
+          const today2 = new Date(); today2.setHours(0,0,0,0);
+          const wIdx2 = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].indexOf(d.toLowerCase());
+          const diff2 = (wIdx2 - today2.getDay() + 7) % 7 || 7;
+          const dd = new Date(today2); dd.setDate(dd.getDate()+diff2);
+          return { label: d, val: dd.toISOString().slice(0,10), icon: 'calendar', type: 'date' };
+        }),
+      ].filter(s => !query || s.label.toLowerCase().startsWith(query));
+      if (suggestions.length) {
+        setMenu({ items: suggestions, type: 'date', index: 0, startPos: text.length - lastWord.length });
+        return;
+      }
+    }
 
-      if (filtered.length) {
-        setMenu({ items: filtered, type: 'project', index: 0, startPos: text.length - lastWord.length });
+    if (lastWord.startsWith('^')) {
+      const query = lastWord.slice(1);
+      // Parse time: ^14:30, ^3pm, ^3:30pm, ^3:00 PM
+      const parseTime = (q: string): string | null => {
+        const amPm = q.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+        if (amPm) {
+          let h = parseInt(amPm[1],10);
+          const m = amPm[2] ? parseInt(amPm[2],10) : 0;
+          if (amPm[3].toLowerCase() === 'pm' && h < 12) h += 12;
+          if (amPm[3].toLowerCase() === 'am' && h === 12) h = 0;
+          return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+        const hm = q.match(/^(\d{1,2}):(\d{2})$/);
+        if (hm) return `${String(parseInt(hm[1],10)).padStart(2,'0')}:${hm[2]}`;
+        return null;
+      };
+      const parsed = parseTime(query.trim());
+      if (parsed) {
+        setStagedMeta(s => ({ ...s, dueTime: parsed }));
+        const text = editor?.getText() || '';
+        const before = text.slice(0, menu?.startPos ?? text.lastIndexOf('^'));
+        editor?.chain().focus().setContent(before).run();
+        setTitle(before);
+        setMenu(null);
+        return;
+      }
+      // Show time suggestion menu
+      const timeSuggestions = ['6:00 AM','8:00 AM','9:00 AM','12:00 PM','3:00 PM','6:00 PM','8:00 PM','10:00 PM']
+        .filter(t => !query || t.toLowerCase().startsWith(query.toLowerCase()))
+        .map(t => {
+          const amPmM = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)!;
+          let h = parseInt(amPmM[1],10);
+          if (amPmM[3].toUpperCase() === 'PM' && h < 12) h += 12;
+          if (amPmM[3].toUpperCase() === 'AM' && h === 12) h = 0;
+          return { label: t, val: `${String(h).padStart(2,'0')}:${amPmM[2]}`, icon: 'clock', type: 'time' };
+        });
+      if (timeSuggestions.length) {
+        const text = editor?.getText() || '';
+        setMenu({ items: timeSuggestions, type: 'time', index: 0, startPos: text.length - lastWord.length });
         return;
       }
     }
@@ -301,7 +390,7 @@ export function useQuickEntryController({
           const decorations: Decoration[] = [];
           state.doc.descendants((node, pos) => {
             if (node.isText && node.text) {
-              const regex = /([@#^!+*]\w+)/g;
+              const regex = /([@#?^!+*]\w+)/g;
               let match;
               while ((match = regex.exec(node.text)) !== null) {
                 const token = match[0];
@@ -316,8 +405,10 @@ export function useQuickEntryController({
                   isValid = tags.some((t: string) => t.toLowerCase() === value);
                 } else if (type === '!') {
                   isValid = ['p1', 'p2', 'p3', 'p4'].includes(value);
+                } else if (type === '?') {
+                  isValid = ['today','tomorrow','monday','tuesday','wednesday','thursday','friday','saturday','sunday'].some(d => d.startsWith(value)) || /^\d{1,2}[a-z]{3}/.test(value);
                 } else if (type === '^') {
-                  isValid = projects.some((p: string) => p.toLowerCase() === value);
+                  isValid = /^\d{1,2}(:\d{2})?(am|pm)?$/.test(value);
                 } else if (type === '+') {
                   isValid = ['0', '5', '10', '15', '30', '60'].includes(value);
                 } else if (type === '*') {
@@ -366,7 +457,11 @@ export function useQuickEntryController({
     if (!editor || !menu) return;
 
     let tokenToInsert = '';
-    if (type === 'new_user' || type === 'assignee') {
+    if (type === 'date') {
+      setStagedMeta((s) => ({ ...s, dueDate: val as string }));
+    } else if (type === 'time') {
+      setStagedMeta((s) => ({ ...s, dueTime: val as string }));
+    } else if (type === 'new_user' || type === 'assignee') {
       const user = users.find((u: any) => u.id === val);
       if (currentUser?.role !== 'admin' && val !== currentUser?.id) return;
       tokenToInsert = `@${user ? user.name.split(' ')[0] : val}`;
@@ -375,9 +470,6 @@ export function useQuickEntryController({
       if (type === 'new_tag') addTag(val as string);
       tokenToInsert = `#${val}`;
       setStagedMeta((s) => ({ ...s, tags: s.tags.includes(val) ? s.tags : [...s.tags, val] }));
-    } else if (type === 'new_project' || type === 'project') {
-      tokenToInsert = `^${val}`;
-      setStagedMeta((s) => ({ ...s, projectId: val }));
     } else if (type === 'priority') {
       tokenToInsert = `!${val}`;
       setStagedMeta((s) => ({ ...s, priority: val }));

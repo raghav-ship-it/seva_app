@@ -10,7 +10,8 @@ const tokens = [
   { symbol: '@', label: 'Assignee', color: '#3b82f6' },
   { symbol: '#', label: 'Tag', color: '#10b981' },
   { symbol: '!', label: 'Priority', color: '#f59e0b' },
-  { symbol: '^', label: 'Project', color: '#8b5cf6' },
+  { symbol: '?', label: 'Date', color: '#0ea5e9' },
+  { symbol: '^', label: 'Time', color: '#8b5cf6' },
   { symbol: '+', label: 'Reminder', color: '#ef4444' },
   { symbol: '*', label: 'Recurrence', color: '#6366f1' },
 ];
