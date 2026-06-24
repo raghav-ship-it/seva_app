@@ -97,59 +97,56 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
           </p>
         )}
         
-        {/* Metadata Badges */}
-        <div className="flex flex-wrap gap-2 mt-2 items-center">
-          {/* Project */}
-          {task.project && (
-            <span className={`${styles.tagPill} text-green-600 dark:text-green-400 font-bold flex items-center gap-1`}>
-              <i className="fas fa-circle text-[6px]"></i> {task.project}
-            </span>
-          )}
+        {/* Metadata Badges — only rendered when tokens exist */}
+        {(task.project || task.dueDate || task.dueTime || task.tags.length > 0 || task.recurrence || showAssignee) && (
+          <div className="flex flex-wrap gap-2 mt-1.5 items-center">
+            {/* Project */}
+            {task.project && (
+              <span className={`${styles.tagPill} text-green-600 dark:text-green-400 font-bold flex items-center gap-1`}>
+                <i className="fas fa-circle text-[6px]"></i> {task.project}
+              </span>
+            )}
 
-          {/* Due Date */}
-          {(task.dueDate || task.dueTime) && (
-            <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
-              isOverdue ? `${styles.overdue} animate-pulse` : 'text-orange-600 font-medium'
-            }`}>
-              <i className="fas fa-clock text-[9px]"></i> 
-              
-              {/* Case 1: Has a due date with optional time */}
-              {task.dueDate && (
-                task.dueDate.includes('T')
-                  ? dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                  : dDate?.toLocaleDateString()
-              )}
-              
-              {/* Case 2: Time-only (e.g., Recurring daily tasks) */}
-              {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}
-              
-              {isOverdue && ' (Overdue)'}
-            </span>
-          )}
-          
-          {/* Tags */}
-          {task.tags.map(tag => (
-            <span key={tag} className={styles.tagPill}>{tag}</span>
-          ))}
-          
-          {/* Recurrence */}
-          {task.recurrence && (
-            <span className={`${styles.tagPill} text-purple-500 flex items-center gap-1`}>
-              <i className="fas fa-redo text-[8px]"></i> {task.recurrence}
-            </span>
-          )}
-          
-          {/* Assignee */}
-          {showAssignee && (
-            <span className={`${styles.tagPill} text-blue-500 font-bold flex items-center gap-1`}>
-              <i className="fas fa-user text-[8px]"></i> {assigneeName}
-            </span>
-          )}
-        </div>
+            {/* Due Date */}
+            {(task.dueDate || task.dueTime) && (
+              <span className={`text-[10px] font-bold flex items-center gap-1.5 ${
+                isOverdue ? `${styles.overdue} animate-pulse` : 'text-orange-600 font-medium'
+              }`}>
+                <i className="fas fa-clock text-[9px]"></i> 
+                {task.dueDate && (
+                  task.dueDate.includes('T')
+                    ? dDate?.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : dDate?.toLocaleDateString()
+                )}
+                {!task.dueDate && task.dueTime && `Daily at ${formatTimeStr(task.dueTime)}`}
+                {isOverdue && ' (Overdue)'}
+              </span>
+            )}
+            
+            {/* Tags */}
+            {task.tags.map(tag => (
+              <span key={tag} className={styles.tagPill}>{tag}</span>
+            ))}
+            
+            {/* Recurrence */}
+            {task.recurrence && (
+              <span className={`${styles.tagPill} text-purple-500 flex items-center gap-1`}>
+                <i className="fas fa-redo text-[8px]"></i> {task.recurrence}
+              </span>
+            )}
+            
+            {/* Assignee */}
+            {showAssignee && (
+              <span className={`${styles.tagPill} text-blue-500 font-bold flex items-center gap-1`}>
+                <i className="fas fa-user text-[8px]"></i> {assigneeName}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Task Row Actions */}
-      <div className="flex items-center gap-2.5 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <select 
           value={task.status} 
           onChange={(e) => {
@@ -165,29 +162,29 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, showAssignee }) => {
           onClick={(e) => e.stopPropagation()}
           className={`${styles.statusBadge} ${s.class} border-none outline-none cursor-pointer appearance-none text-center font-bold`}
         >
-          <option value="pending">Pending</option>
-          <option value="in_progress">Doing</option>
-          <option value="review">Review</option>
-          <option value="completed">Done</option>
+          <option value="pending">·</option>
+          <option value="in_progress">▶</option>
+          <option value="review">⏳</option>
+          <option value="completed">✓</option>
         </select>
 
-        <div className="flex items-center gap-2.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <button 
             onClick={() => toggleMyDay(task.id)}
-            className={`w-7 h-7 rounded-lg hover:bg-[var(--border-color)] flex items-center justify-center transition-all ${
-              task.myDay ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'
+            className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+              task.myDay ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
             }`}
             title={task.myDay ? "Remove from My Day" : "Add to My Day"}
           >
-            <i className="fas fa-sun text-sm"></i>
+            <i className="fas fa-sun text-[11px]"></i>
           </button>
           
           <button 
             onClick={() => deleteTask(task.id)}
-            className="w-7 h-7 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all"
+            className="w-6 h-6 rounded flex items-center justify-center text-gray-300 hover:text-red-500 transition-all"
             title="Delete task"
           >
-            <i className="fas fa-trash text-xs"></i>
+            <i className="fas fa-trash text-[10px]"></i>
           </button>
         </div>
       </div>
