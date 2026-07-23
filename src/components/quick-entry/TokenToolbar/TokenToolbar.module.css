@@ -1,22 +1,59 @@
 .toolbar {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: #f9fafb;
-  overflow-x: auto;
-  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  /* Pill shape */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+/* Symbol Badge */
+.symbolBadge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 3rem;
-  height: 3rem;
-  border-radius: 0.5rem;
-  border: 2px solid;
-  background-color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
-  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--token-color);
+  background-color: color-mix(in srgb, var(--token-color) 12%, transparent);
+}
+
+/* Text Label */
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1;
+}
+
+/* Hover & Focus Interactions */
+.button:hover {
+  border-color: var(--token-color);
+  background-color: color-mix(in srgb, var(--token-color) 6%, transparent);
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--token-color);
+  outline-offset: 2px;
 }

@@ -17,7 +17,8 @@ const tokens = [
 ];
 
 export const TokenToolbar: React.FC<TokenToolbarProps> = ({ onTokenClick, isAdmin = false }) => {
-  const visibleTokens = isAdmin ? tokens : tokens.filter(t => t.symbol !== '@');
+  const visibleTokens = isAdmin ? tokens : tokens.filter((t) => t.symbol !== '@');
+
   return (
     <div className={styles.toolbar}>
       {visibleTokens.map((token) => (
@@ -26,9 +27,10 @@ export const TokenToolbar: React.FC<TokenToolbarProps> = ({ onTokenClick, isAdmi
           className={styles.button}
           onClick={() => onTokenClick(token.symbol)}
           aria-label={`Add ${token.label} token`}
-          style={{ borderColor: token.color, color: token.color }}
+          style={{ '--token-color': token.color } as React.CSSProperties}
         >
-          {token.symbol}
+          <span className={styles.symbolBadge}>{token.symbol}</span>
+          <span className={styles.label}>{token.label}</span>
         </button>
       ))}
     </div>

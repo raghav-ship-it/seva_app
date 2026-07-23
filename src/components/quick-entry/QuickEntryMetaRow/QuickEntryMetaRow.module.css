@@ -1,150 +1,173 @@
+/* Meta Container - Compact & Flexible */
 .metaContainer {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  /* Wraps gracefully on tiny screens, fits 1 row on standard views */
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+  /* Compact 6px gap */
   margin-top: 0.5rem;
-  padding: 0 1rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.metaContainer::-webkit-scrollbar {
-  display: none;
+  padding: 0 0.5rem;
 }
 
 .metaItem {
   position: relative;
 }
 
+/* Compact Button Design */
 .metaButton {
-  height: 2.75rem;
-  padding: 0 1rem;
-  font-size: 0.875rem;
+  height: 2rem;
+  /* Reduced height (32px) */
+  padding: 0 0.625rem;
+  /* Reduced horizontal padding (10px) */
+  font-size: 0.75rem;
+  /* Crisp 12px font */
   font-weight: 500;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  color: #6b7280;
+  gap: 0.375rem;
+  transition: all 0.15s ease-in-out;
+  color: #4b5563;
+  background-color: #ffffff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Label text truncates gracefully if assignee/date names are long */
+.metaButton span {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metaButton:hover {
   background-color: #f9fafb;
+  border-color: #d1d5db;
 }
 
+/* --- Contextual Active States --- */
 .metaButtonActive {
-  background-color: rgba(239, 246, 255, 0.4);
+  background-color: #eff6ff;
   border-color: #bfdbfe;
   color: #2563eb;
 }
 
-.metaButtonActive:hover {
-  background-color: #eff6ff;
-}
-
 .metaButtonAssigneeActive {
+  background-color: #fff7ed;
   border-color: #fed7aa;
-  background-color: rgba(255, 247, 237, 0.4);
   color: #ea580c;
 }
 
-.metaButtonAssigneeActive:hover {
-  background-color: #fff7ed;
-}
-
 .metaButtonPriorityActive {
+  background-color: #fef2f2;
   border-color: #fecaca;
-  background-color: rgba(254, 242, 242, 0.4);
   color: #dc2626;
 }
 
-.metaButtonPriorityActive:hover {
-  background-color: #fef2f2;
-}
-
 .metaButtonRecurrenceActive {
+  background-color: #f0fdfa;
   border-color: #99f6e4;
-  background-color: rgba(240, 253, 250, 0.4);
   color: #0d9488;
 }
 
-.metaButtonRecurrenceActive:hover {
-  background-color: #f0fdfa;
+.metaButtonReminderActive {
+  background-color: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #7c3aed;
 }
 
+/* --- Popover Rendered ABOVE Buttons --- */
 .popover {
   position: absolute;
   left: 0;
-  top: 100%;
-  margin-top: 0.25rem;
-  background-color: white;
+  bottom: 100%;
+  /* Positions popover above the button */
+  top: auto;
+  margin-bottom: 0.375rem;
+  /* Gap above button */
+  background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 16px -2px rgba(0, 0, 0, 0.08), 0 -2px 6px -1px rgba(0, 0, 0, 0.04);
   z-index: 50;
-  min-width: 12rem;
+  min-width: 10.5rem;
   padding: 0.25rem;
   display: flex;
   flex-direction: column;
+
+  /* Smooth upward slide-in animation */
+  animation: popoverSlideUp 0.15s ease-out forwards;
+}
+
+@keyframes popoverSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .popoverItem {
   text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   border-radius: 0.25rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease;
   color: #374151;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
 }
 
 .popoverItem:hover {
-  background-color: #f9fafb;
+  background-color: #f3f4f6;
 }
 
+/* --- Tags / Chips Container --- */
 .tagsContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding: 0 1rem;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+  padding: 0 0.5rem;
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   background-color: #f5f3ff;
   color: #6d28d9;
   border: 1px solid #ede9fe;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
 .removeTagBtn {
-  margin-left: 0.25rem;
+  margin-left: 0.125rem;
   font-weight: 700;
-  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8b5cf6;
+  transition: color 0.15s;
+  line-height: 1;
 }
 
 .removeTagBtn:hover {
   color: #5b21b6;
-}
-
-.metaButtonReminderActive {
-  border-color: #ddd6fe;
-  background-color: rgba(245, 243, 255, 0.4);
-  color: #7c3aed;
-}
-
-.metaButtonReminderActive:hover {
-  background-color: #f5f3ff;
 }

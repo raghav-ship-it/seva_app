@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { getLocalDateStr } from '@/lib/date';
 import type { Priority } from '@/lib/types';
 import { PopoverType, MetaState } from '../types';
 import styles from './QuickEntryMetaRow.module.css';
@@ -24,14 +23,15 @@ export default function QuickEntryMetaRow({
   setStagedMeta,
   removeTag,
 }: QuickEntryMetaRowProps) {
-  // Format ISO date into clean label like "Tomorrow" / "Monday" / "Jun 29"
+  // Format ISO date into clean short label
   const formatDateLabel = (iso: string): string => {
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const d = new Date(iso + 'T00:00');
     const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Tomorrow';
-    if (diff > 1 && diff < 7) return d.toLocaleDateString('en-US', { weekday: 'long' });
+    if (diff > 1 && diff < 7) return d.toLocaleDateString('en-US', { weekday: 'short' });
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
@@ -44,15 +44,12 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'schedule' ? null : 'schedule')}
-            className={`${styles.metaButton} ${
-              stagedMeta.dueDate ? styles.metaButtonActive : ''
-            }`}
+            className={`${styles.metaButton} ${stagedMeta.dueDate ? styles.metaButtonActive : ''
+              }`}
           >
-            <i className="far fa-calendar text-[10px]"></i>
+            <i className="far fa-calendar text-[11px]"></i>
             <span>
-              {stagedMeta.dueDate
-                ? formatDateLabel(stagedMeta.dueDate)
-                : 'Schedule'}
+              {stagedMeta.dueDate ? formatDateLabel(stagedMeta.dueDate) : 'Date'}
             </span>
           </button>
         </div>
@@ -62,15 +59,14 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'assignee' ? null : 'assignee')}
-            className={`${styles.metaButton} ${
-              stagedMeta.assigneeId ? styles.metaButtonAssigneeActive : ''
-            }`}
+            className={`${styles.metaButton} ${stagedMeta.assigneeId ? styles.metaButtonAssigneeActive : ''
+              }`}
           >
-            <i className="far fa-user text-[10px]"></i>
+            <i className="far fa-user text-[11px]"></i>
             <span>
               {stagedMeta.assigneeId
                 ? users.find((u) => u.id === stagedMeta.assigneeId)?.name || 'Assigned'
-                : 'Assignee'}
+                : 'Doer'}
             </span>
           </button>
 
@@ -98,11 +94,10 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'priority' ? null : 'priority')}
-            className={`${styles.metaButton} ${
-              stagedMeta.priority ? styles.metaButtonPriorityActive : ''
-            }`}
+            className={`${styles.metaButton} ${stagedMeta.priority ? styles.metaButtonPriorityActive : ''
+              }`}
           >
-            <i className="far fa-flag text-[10px]"></i>
+            <i className="far fa-flag text-[11px]"></i>
             <span>{stagedMeta.priority ? stagedMeta.priority.toUpperCase() : 'Priority'}</span>
           </button>
 
@@ -117,9 +112,16 @@ export default function QuickEntryMetaRow({
                   }}
                   className={styles.popoverItem}
                 >
-                  <i className={`fas fa-flag text-[10px] ${
-                    p === 'p1' ? 'text-red-500' : p === 'p2' ? 'text-orange-500' : p === 'p3' ? 'text-blue-500' : 'text-gray-400'
-                  }`}></i>
+                  <i
+                    className={`fas fa-flag text-[10px] ${p === 'p1'
+                      ? 'text-red-500'
+                      : p === 'p2'
+                        ? 'text-orange-500'
+                        : p === 'p3'
+                          ? 'text-blue-500'
+                          : 'text-gray-400'
+                      }`}
+                  ></i>
                   {p.toUpperCase()}
                 </button>
               ))}
@@ -132,21 +134,20 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'recurrence' ? null : 'recurrence')}
-            className={`${styles.metaButton} ${
-              stagedMeta.recurrence ? styles.metaButtonRecurrenceActive : ''
-            }`}
+            className={`${styles.metaButton} ${stagedMeta.recurrence ? styles.metaButtonRecurrenceActive : ''
+              }`}
           >
-            <i className="fas fa-redo text-[9px]"></i>
-            <span>{stagedMeta.recurrence || 'No Repeat'}</span>
+            <i className="fas fa-redo text-[10px]"></i>
+            <span>{stagedMeta.recurrence || 'None'}</span>
           </button>
 
           {activePopover === 'recurrence' && (
             <div className={styles.popover}>
               {[
                 { label: 'None', val: null },
-                { label: 'Daily', val: 'daily' },
-                { label: 'Weekly', val: 'weekly' },
-                { label: 'Monthly', val: 'monthly' },
+                { label: 'Daily', val: 'Daily' },
+                { label: 'Weekly', val: 'Weekly' },
+                { label: 'Monthly', val: 'Monthly' },
               ].map((rec) => (
                 <button
                   key={rec.label}
@@ -168,14 +169,15 @@ export default function QuickEntryMetaRow({
           <button
             type="button"
             onClick={() => setActivePopover(activePopover === 'reminder' ? null : 'reminder')}
-            className={`${styles.metaButton} ${
-              stagedMeta.reminder ? styles.metaButtonReminderActive : ''
-            }`}
+            className={`${styles.metaButton} ${stagedMeta.reminder ? styles.metaButtonReminderActive : ''
+              }`}
           >
-            <i className="far fa-bell text-[10px]"></i>
+            <i className="far fa-bell text-[11px]"></i>
             <span>
               {stagedMeta.reminder
-                ? stagedMeta.reminder === '0' ? 'At time of event' : `${stagedMeta.reminder}m before`
+                ? stagedMeta.reminder === '0'
+                  ? 'At event'
+                  : `${stagedMeta.reminder}m before`
                 : 'Alarm'}
             </span>
           </button>
@@ -208,14 +210,11 @@ export default function QuickEntryMetaRow({
         </div>
       </div>
 
-      {/* Chips */}
+      {/* Tags Chips */}
       {stagedMeta.tags.length > 0 && (
         <div className={styles.tagsContainer}>
           {stagedMeta.tags.map((t) => (
-            <span
-              key={t}
-              className={styles.tag}
-            >
+            <span key={t} className={styles.tag}>
               #{t}
               <button
                 type="button"
